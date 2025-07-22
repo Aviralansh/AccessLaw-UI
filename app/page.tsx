@@ -419,7 +419,7 @@ Please provide a detailed, accurate response based on the legal sources provided
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about Indian legal documents..."
+              placeholder="Someone file fake case on me, what should I do?"
               disabled={isLoading}
               className="font-mono flex-1"
             />
