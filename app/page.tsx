@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Send, Settings, Moon, Sun, Clock, Database } from "lucide-react"
+import { Send, Settings, Moon, Sun, Clock, Database, X } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 
 interface RAGResult {
@@ -68,7 +68,13 @@ export default function LegalRAGChat() {
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Only auto-scroll if user is already at the bottom or it's a new message
+    const isAtBottom =
+      messagesEndRef.current && messagesEndRef.current.getBoundingClientRect().bottom <= window.innerHeight + 100
+
+    if (isAtBottom || messages.length <= 1) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    }
   }
 
   useEffect(() => {
@@ -88,8 +94,29 @@ export default function LegalRAGChat() {
     }
   }, [darkMode])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const stopStreaming = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+
+      // Update the last message to mark it as no longer streaming
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
+          return [
+            ...prev.slice(0, -1),
+            { ...lastMessage, isStreaming: false, content: lastMessage.content + " [Response stopped]" },
+          ]
+        }
+        return prev
+      })
+
+      setIsLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     if (!input.trim() || isLoading) return
 
     const userMessage: Message = {
@@ -540,13 +567,16 @@ Please provide a detailed, accurate response based on the legal sources provided
               className="font-mono flex-1 transition-all duration-200 focus:scale-[1.02] hover:border-current/40"
             />
             <Button
-              type="submit"
-              disabled={isLoading || !input.trim()}
+              type="button"
+              onClick={isLoading ? stopStreaming : handleSubmit}
+              disabled={!isLoading && !input.trim()}
               className="font-mono transition-all duration-200 hover:scale-110 disabled:scale-100 hover:shadow-lg"
             >
-              <Send
-                className={`w-4 h-4 transition-all duration-300 ${isLoading ? "animate-pulse" : "hover:translate-x-1"}`}
-              />
+              {isLoading ? (
+                <X className="w-4 h-4 transition-all duration-300 animate-pulse" />
+              ) : (
+                <Send className="w-4 h-4 transition-all duration-300 hover:translate-x-1" />
+              )}
             </Button>
           </form>
         </div>
