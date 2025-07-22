@@ -56,7 +56,7 @@ export default function LegalRAGChat() {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
   const [queryParams, setQueryParams] = useState<QueryParams>({
     top_k: 3,
     rerank: false,
@@ -74,6 +74,11 @@ export default function LegalRAGChat() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    // Set dark mode by default on initial load
+    document.documentElement.classList.add("dark")
+  }, [])
 
   useEffect(() => {
     if (darkMode) {
