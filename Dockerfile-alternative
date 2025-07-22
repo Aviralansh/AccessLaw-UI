@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Generate package-lock.json and install dependencies
+RUN npm install --package-lock-only && npm ci --only=production
+
+# Copy all source files
+COPY . .
+
+# Build the Next.js application
+RUN npm run build
+
+# Expose port 7860 (required for HuggingFace Spaces)
+EXPOSE 7860
+
+# Start the application on port 7860
+CMD ["npm", "start", "--", "-p", "7860"]

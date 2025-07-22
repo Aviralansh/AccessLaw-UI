@@ -1,0 +1,2 @@
+# This file is required for HuggingFace Spaces Docker deployment
+# The actual dependencies are managed by package.json
