@@ -41,6 +41,7 @@ interface Message {
   ragResponse?: RAGResponse
   totalTime?: number
   isStreaming?: boolean
+  isSearching?: boolean // Add this line
 }
 
 interface QueryParams {
@@ -128,6 +129,7 @@ export default function LegalRAGChat() {
         timestamp: new Date(),
         ragResponse: ragData,
         isStreaming: true,
+        isSearching: true, // Add this flag
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -186,7 +188,9 @@ Please provide a detailed, accurate response based on the legal sources provided
                 if (parsed.content) {
                   streamedContent += parsed.content
                   setMessages((prev) =>
-                    prev.map((msg) => (msg.id === assistantMessageId ? { ...msg, content: streamedContent } : msg)),
+                    prev.map((msg) =>
+                      msg.id === assistantMessageId ? { ...msg, content: streamedContent, isSearching: false } : msg,
+                    ),
                   )
                 }
               } catch (e) {
@@ -314,10 +318,10 @@ Please provide a detailed, accurate response based on the legal sources provided
                   <p className="font-mono text-sm">{message.content}</p>
                 ) : (
                   <div className="space-y-4">
-                    {message.isStreaming && !message.content ? (
+                    {message.isStreaming && (!message.content || message.isSearching) ? (
                       <div className="flex items-center space-x-2 font-mono text-sm opacity-70">
                         <LoadingAnimation />
-                        <span>Searching legal documents...</span>
+                        <span>{message.isSearching ? "Searching legal documents..." : "Generating response..."}</span>
                       </div>
                     ) : (
                       <>
