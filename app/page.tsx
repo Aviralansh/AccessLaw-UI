@@ -41,7 +41,7 @@ interface Message {
   ragResponse?: RAGResponse
   totalTime?: number
   isStreaming?: boolean
-  isSearching?: boolean // Add this line
+  isSearching?: boolean
 }
 
 interface QueryParams {
@@ -105,6 +105,19 @@ export default function LegalRAGChat() {
 
     const startTime = Date.now()
 
+    // Create assistant message with loading state immediately
+    const assistantMessageId = (Date.now() + 1).toString()
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      type: "assistant",
+      content: "",
+      timestamp: new Date(),
+      isStreaming: true,
+      isSearching: true,
+    }
+
+    setMessages((prev) => [...prev, assistantMessage])
+
     try {
       // Step 1: Query RAG API
       const ragResponse = await fetch("https://aviralansh-accesslaw.hf.space/search", {
@@ -123,21 +136,9 @@ export default function LegalRAGChat() {
       }
 
       const ragData: RAGResponse = await ragResponse.json()
-      const ragTime = Date.now()
 
-      // Create assistant message with loading state
-      const assistantMessageId = (Date.now() + 1).toString()
-      const assistantMessage: Message = {
-        id: assistantMessageId,
-        type: "assistant",
-        content: "",
-        timestamp: new Date(),
-        ragResponse: ragData,
-        isStreaming: true,
-        isSearching: true, // Add this flag
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
+      // Update message with RAG response but keep searching state
+      setMessages((prev) => prev.map((msg) => (msg.id === assistantMessageId ? { ...msg, ragResponse: ragData } : msg)))
 
       // Step 2: Send to OpenRouter with streaming
       const context = ragData.results
@@ -174,6 +175,7 @@ Please provide a detailed, accurate response based on the legal sources provided
       const reader = response.body?.getReader()
       const decoder = new TextDecoder()
       let streamedContent = ""
+      let firstTokenReceived = false
 
       if (reader) {
         while (true) {
@@ -191,11 +193,16 @@ Please provide a detailed, accurate response based on the legal sources provided
               try {
                 const parsed = JSON.parse(data)
                 if (parsed.content) {
+                  if (!firstTokenReceived) {
+                    firstTokenReceived = true
+                    // Stop the searching animation when first token is received
+                    setMessages((prev) =>
+                      prev.map((msg) => (msg.id === assistantMessageId ? { ...msg, isSearching: false } : msg)),
+                    )
+                  }
                   streamedContent += parsed.content
                   setMessages((prev) =>
-                    prev.map((msg) =>
-                      msg.id === assistantMessageId ? { ...msg, content: streamedContent, isSearching: false } : msg,
-                    ),
+                    prev.map((msg) => (msg.id === assistantMessageId ? { ...msg, content: streamedContent } : msg)),
                   )
                 }
               } catch (e) {
@@ -235,6 +242,21 @@ Please provide a detailed, accurate response based on the legal sources provided
       <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
     </div>
   )
+
+  const CyclingLoadingText = () => {
+    const [currentIndex, setCurrentIndex] = useState(0)
+    const loadingTexts = ["Searching legal documents...", "Diving deep in laws...", "Thinking...", "More documents..."]
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % loadingTexts.length)
+      }, 1500) // Change text every 1.5 seconds
+
+      return () => clearInterval(interval)
+    }, [])
+
+    return <span>{loadingTexts[currentIndex]}</span>
+  }
 
   return (
     <div
@@ -323,10 +345,15 @@ Please provide a detailed, accurate response based on the legal sources provided
                   <p className="font-mono text-sm">{message.content}</p>
                 ) : (
                   <div className="space-y-4">
-                    {message.isStreaming && (!message.content || message.isSearching) ? (
+                    {message.isStreaming && message.isSearching ? (
                       <div className="flex items-center space-x-2 font-mono text-sm opacity-70">
                         <LoadingAnimation />
-                        <span>{message.isSearching ? "Searching legal documents..." : "Generating response..."}</span>
+                        <CyclingLoadingText />
+                      </div>
+                    ) : message.isStreaming && !message.content ? (
+                      <div className="flex items-center space-x-2 font-mono text-sm opacity-70">
+                        <LoadingAnimation />
+                        <span>Generating response...</span>
                       </div>
                     ) : (
                       <>
