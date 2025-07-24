@@ -10,9 +10,10 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Send, Settings, Moon, Sun, Clock, Database, X } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import { ChevronDown, ChevronUp } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface RAGResult {
   content: string
@@ -58,7 +59,6 @@ export default function LegalRAGChat() {
   const [isLoading, setIsLoading] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [darkMode, setDarkMode] = useState(true)
-  const [showSources, setShowSources] = useState(false)
   const [queryParams, setQueryParams] = useState<QueryParams>({
     top_k: 3,
     rerank: false,
@@ -68,6 +68,7 @@ export default function LegalRAGChat() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({})
 
   const scrollToBottom = () => {
     // Only auto-scroll if user is already at the bottom or it's a new message
@@ -314,31 +315,45 @@ Please provide a detailed, accurate response based on the legal sources provided
                 </p>
               </div>
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="font-mono transition-all duration-200 hover:scale-110 hover:bg-current/10"
-                >
-                  <Settings
-                    className={`w-4 h-4 transition-transform duration-300 ${showSettings ? "rotate-90" : "rotate-0"}`}
-                  />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="font-mono transition-all duration-200 hover:scale-110 hover:bg-current/10"
-                >
-                  <div className="relative w-4 h-4">
-                    <Sun
-                      className={`w-4 h-4 absolute transition-all duration-500 ${darkMode ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`}
-                    />
-                    <Moon
-                      className={`w-4 h-4 absolute transition-all duration-500 ${darkMode ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"}`}
-                    />
-                  </div>
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowSettings(!showSettings)}
+                      className="font-mono transition-all duration-200 hover:scale-110 hover:bg-current/10"
+                    >
+                      <Settings
+                        className={`w-4 h-4 transition-transform duration-300 ${showSettings ? "rotate-90" : "rotate-0"}`}
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-mono text-xs">Configure search parameters and query options</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDarkMode(!darkMode)}
+                      className="font-mono transition-all duration-200 hover:scale-110 hover:bg-current/10"
+                    >
+                      <div className="relative w-4 h-4">
+                        <Sun
+                          className={`w-4 h-4 absolute transition-all duration-500 ${darkMode ? "opacity-0 rotate-90 scale-0" : "opacity-100 rotate-0 scale-100"}`}
+                        />
+                        <Moon
+                          className={`w-4 h-4 absolute transition-all duration-500 ${darkMode ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-0"}`}
+                        />
+                      </div>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-mono text-xs">Toggle between light and dark theme modes</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </header>
@@ -372,29 +387,42 @@ Please provide a detailed, accurate response based on the legal sources provided
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2 transition-all duration-200 hover:scale-105">
-                      <Switch
-                        checked={queryParams.rerank}
-                        onCheckedChange={(checked) => setQueryParams((prev) => ({ ...prev, rerank: checked }))}
-                      />
-                      <Label className="font-mono text-sm">Rerank Results</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 transition-all duration-200 hover:scale-105">
-                      <Switch
-                        checked={queryParams.include_scores}
-                        onCheckedChange={(checked) => setQueryParams((prev) => ({ ...prev, include_scores: checked }))}
-                      />
-                      <Label className="font-mono text-sm">Include Scores</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={queryParams.rerank}
+                              onCheckedChange={(checked) => setQueryParams((prev) => ({ ...prev, rerank: checked }))}
+                            />
+                            <Label className="font-mono text-sm cursor-pointer">Rerank Results</Label>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-mono text-xs">
+                            Reorder search results using advanced ranking algorithms for better relevance
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                     <div className="flex items-center space-x-2 transition-all duration-200 hover:scale-105">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Switch checked={showSources} onCheckedChange={(checked) => setShowSources(checked)} />
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              checked={queryParams.include_scores}
+                              onCheckedChange={(checked) =>
+                                setQueryParams((prev) => ({ ...prev, include_scores: checked }))
+                              }
+                            />
+                            <Label className="font-mono text-sm cursor-pointer">Include Scores</Label>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Show/hide source documents in responses</p>
+                          <p className="font-mono text-xs">
+                            Display similarity scores showing how well each source matches your query
+                          </p>
                         </TooltipContent>
                       </Tooltip>
-                      <Label className="font-mono text-sm">Show Sources</Label>
                     </div>
                   </div>
                 </div>
@@ -540,59 +568,87 @@ Please provide a detailed, accurate response based on the legal sources provided
                                 )}
                               </div>
 
-                              {message.ragResponse && showSources && (
+                              {message.ragResponse && (
                                 <div
                                   className="space-y-3 pt-4 border-t border-current/20 animate-slide-in-up"
                                   style={{ animationDelay: "300ms" }}
                                 >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-4 text-xs font-mono opacity-70 transition-all duration-200 hover:opacity-100">
-                                      <div className="flex items-center space-x-1 transition-all duration-200 hover:scale-105">
-                                        <Database className="w-3 h-3 animate-pulse" />
-                                        <span>RAG: {message.ragResponse.search_time.toFixed(2)}s</span>
-                                      </div>
-                                      {message.totalTime && (
-                                        <div className="flex items-center space-x-1 transition-all duration-200 hover:scale-105">
-                                          <Clock className="w-3 h-3 animate-pulse" />
-                                          <span>Total: {(message.totalTime / 1000).toFixed(2)}s</span>
-                                        </div>
-                                      )}
-                                      <span className="transition-all duration-200 hover:scale-105">
-                                        {message.ragResponse.total_results} sources
-                                      </span>
+                                  <div className="flex items-center space-x-4 text-xs font-mono opacity-70 transition-all duration-200 hover:opacity-100">
+                                    <div className="flex items-center space-x-1 transition-all duration-200 hover:scale-105">
+                                      <Database className="w-3 h-3 animate-pulse" />
+                                      <span>RAG: {message.ragResponse.search_time.toFixed(2)}s</span>
                                     </div>
+                                    {message.totalTime && (
+                                      <div className="flex items-center space-x-1 transition-all duration-200 hover:scale-105">
+                                        <Clock className="w-3 h-3 animate-pulse" />
+                                        <span>Total: {(message.totalTime / 1000).toFixed(2)}s</span>
+                                      </div>
+                                    )}
+                                    <span className="transition-all duration-200 hover:scale-105">
+                                      {message.ragResponse.total_results} sources
+                                    </span>
                                   </div>
 
                                   <div className="space-y-2">
-                                    <h4 className="font-mono text-sm font-bold transition-all duration-200 hover:text-current/80">
-                                      Sources:
-                                    </h4>
-                                    {message.ragResponse.results.map((result, index) => (
-                                      <div
-                                        key={index}
-                                        className="text-xs font-mono space-y-1 transition-all duration-200 hover:bg-current/5 p-2 rounded animate-slide-in-right"
-                                        style={{ animationDelay: `${index * 100}ms` }}
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="font-mono text-sm font-bold transition-all duration-200 hover:text-current/80">
+                                        Sources:
+                                      </h4>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          setExpandedSources((prev) => ({
+                                            ...prev,
+                                            [message.id]: !prev[message.id],
+                                          }))
+                                        }
+                                        className="font-mono text-xs h-6 px-2 transition-all duration-200 hover:scale-105"
                                       >
-                                        <div className="flex items-center space-x-2">
-                                          <Badge
-                                            variant="outline"
-                                            className="font-mono text-xs transition-all duration-200 hover:scale-105 hover:bg-current/10"
-                                          >
-                                            {result.metadata.legal_source}
-                                          </Badge>
-                                          <span className="opacity-70 transition-all duration-200 hover:opacity-100">
-                                            {result.metadata.title}
-                                            {result.metadata.section_number &&
-                                              ` - Section ${result.metadata.section_number}`}
-                                          </span>
-                                        </div>
-                                        {queryParams.include_scores && (
-                                          <div className="opacity-50 transition-all duration-200 hover:opacity-70">
-                                            Similarity: {(result.similarity_score * 100).toFixed(1)}%
-                                          </div>
+                                        {expandedSources[message.id] ? (
+                                          <>
+                                            <ChevronUp className="w-3 h-3 mr-1" />
+                                            Hide
+                                          </>
+                                        ) : (
+                                          <>
+                                            <ChevronDown className="w-3 h-3 mr-1" />
+                                            Show
+                                          </>
                                         )}
+                                      </Button>
+                                    </div>
+
+                                    {expandedSources[message.id] && (
+                                      <div className="space-y-2 animate-slide-in-up">
+                                        {message.ragResponse.results.map((result, index) => (
+                                          <div
+                                            key={index}
+                                            className="text-xs font-mono space-y-1 transition-all duration-200 hover:bg-current/5 p-2 rounded animate-slide-in-right"
+                                            style={{ animationDelay: `${index * 100}ms` }}
+                                          >
+                                            <div className="flex items-center space-x-2">
+                                              <Badge
+                                                variant="outline"
+                                                className="font-mono text-xs transition-all duration-200 hover:scale-105 hover:bg-current/10"
+                                              >
+                                                {result.metadata.legal_source}
+                                              </Badge>
+                                              <span className="opacity-70 transition-all duration-200 hover:opacity-100">
+                                                {result.metadata.title}
+                                                {result.metadata.section_number &&
+                                                  ` - Section ${result.metadata.section_number}`}
+                                              </span>
+                                            </div>
+                                            {queryParams.include_scores && (
+                                              <div className="opacity-50 transition-all duration-200 hover:opacity-70">
+                                                Similarity: {(result.similarity_score * 100).toFixed(1)}%
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
                                       </div>
-                                    ))}
+                                    )}
                                   </div>
                                 </div>
                               )}
