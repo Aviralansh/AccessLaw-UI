@@ -1,151 +1,151 @@
 "use client"
 
 import * as React from "react"
-import { CartesianGrid, Line, LineChart, Bar, BarChart, Area, AreaChart, XAxis, YAxis } from "recharts"
+import {
+  Bar,
+  BarChart,
+  type BarProps,
+  CartesianGrid,
+  type CartesianGridProps,
+  Line,
+  LineChart,
+  type LineProps,
+  Pie,
+  PieChart,
+  type PieProps,
+  XAxis,
+  type XAxisProps,
+  YAxis,
+  type YAxisProps,
+} from "recharts"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   type ChartConfig,
   ChartContainer,
   ChartLegend,
-  ChartLegendContent,
+  type ChartLegendProps,
   ChartTooltip,
-  ChartTooltipContent,
+  type ChartTooltipProps,
 } from "@/components/ui/chart-components"
 import { cn } from "@/lib/utils"
 
-// Define the props for the Chart component
-interface ChartProps extends React.ComponentProps<typeof Card> {
-  chartType: "line" | "bar" | "area"
-  data: Record<string, any>[]
-  config: ChartConfig
-  className?: string
-}
+// Components
+const Chart = ChartContainer
 
-const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
-  ({ chartType, data, config, className, children, ...props }, ref) => {
-    const chartProps = React.useMemo(() => {
-      const chartConfig = config
-      const chartData = data
-
-      const colorMap = Object.keys(chartConfig).reduce(
-        (acc, key) => {
-          if (chartConfig[key].color) {
-            acc[key] = chartConfig[key].color
-          }
-          return acc
-        },
-        {} as Record<string, string>,
-      )
-
-      const renderChart = () => {
-        switch (chartType) {
-          case "line":
-            return (
-              <LineChart data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey={chartConfig.x.dataKey}
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={chartConfig.x.tickFormatter}
-                />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={chartConfig.y.tickFormatter} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                {Object.keys(chartConfig).map((key) => {
-                  if (key === "x" || key === "y") return null
-                  return (
-                    <Line
-                      key={key}
-                      dataKey={chartConfig[key].dataKey}
-                      stroke={chartConfig[key].color}
-                      type="monotone"
-                      dot={false}
-                    />
-                  )
-                })}
-              </LineChart>
-            )
-          case "bar":
-            return (
-              <BarChart data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey={chartConfig.x.dataKey}
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={chartConfig.x.tickFormatter}
-                />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={chartConfig.y.tickFormatter} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                {Object.keys(chartConfig).map((key) => {
-                  if (key === "x" || key === "y") return null
-                  return <Bar key={key} dataKey={chartConfig[key].dataKey} fill={chartConfig[key].color} />
-                })}
-              </BarChart>
-            )
-          case "area":
-            return (
-              <AreaChart data={chartData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey={chartConfig.x.dataKey}
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={chartConfig.x.tickFormatter}
-                />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={chartConfig.y.tickFormatter} />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                {Object.keys(chartConfig).map((key) => {
-                  if (key === "x" || key === "y") return null
-                  return (
-                    <Area
-                      key={key}
-                      dataKey={chartConfig[key].dataKey}
-                      fill={chartConfig[key].color}
-                      stroke={chartConfig[key].color}
-                      type="monotone"
-                    />
-                  )
-                })}
-              </AreaChart>
-            )
-          default:
-            return null
-        }
-      }
-
-      return {
-        chartConfig,
-        chartData,
-        colorMap,
-        renderChart,
-      }
-    }, [chartType, data, config])
-
+const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipProps["content"]>(
+  ({ hideLabel, hideIndicator, className, ...props }, ref) => {
     return (
-      <Card ref={ref} className={cn("flex flex-col", className)} {...props}>
-        <CardHeader>
-          <CardTitle>{props.title}</CardTitle>
-          <CardDescription>{props.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartProps.chartConfig} className="min-h-[200px]">
-            {chartProps.renderChart()}
-          </ChartContainer>
-        </CardContent>
-        {children}
-      </Card>
+      <ChartTooltip
+        ref={ref}
+        hideLabel={hideLabel}
+        hideIndicator={hideIndicator}
+        className={cn("grid grid-cols-1", className)}
+        {...props}
+      />
     )
   },
 )
+ChartTooltipContent.displayName = "ChartTooltipContent"
 
-Chart.displayName = "Chart"
+const ChartLegendContent = React.forwardRef<HTMLDivElement, ChartLegendProps["content"]>(
+  ({ className, ...props }, ref) => {
+    return (
+      <ChartLegend
+        ref={ref}
+        className={cn(
+          "flex flex-wrap justify-center gap-2",
+          "[&>div]:flex [&>div]:items-center [&>div]:gap-1.5",
+          "[&>div>span]:h-3 [&>div>span]:w-3 [&>div>span]:rounded-full",
+          "[&>div>p]:text-xs",
+          className,
+        )}
+        {...props}
+      />
+    )
+  },
+)
+ChartLegendContent.displayName = "ChartLegendContent"
 
-export { Chart }
+// Chart Components
+const ChartCrosshair = React.forwardRef<SVGSVGElement, CartesianGridProps["vertical"]>(
+  ({ className, vertical, horizontal, ...props }, ref) => {
+    return (
+      <CartesianGrid
+        ref={ref}
+        className={cn("stroke-border stroke-1", className)}
+        vertical={vertical}
+        horizontal={horizontal}
+        {...props}
+      />
+    )
+  },
+)
+ChartCrosshair.displayName = "ChartCrosshair"
+
+const ChartAxis = React.forwardRef<SVGSVGElement, XAxisProps | YAxisProps>(({ className, ...props }, ref) => {
+  return (
+    <XAxis
+      ref={ref}
+      className={cn(
+        "fill-muted-foreground text-xs",
+        "[&_.recharts-cartesian-axis-tick_line]:stroke-border",
+        "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground",
+        className,
+      )}
+      {...props}
+    />
+  )
+})
+ChartAxis.displayName = "ChartAxis"
+
+const ChartBar = React.forwardRef<SVGSVGElement, BarProps>(
+  ({ className, fill = "hsl(var(--chart-1))", ...props }, ref) => {
+    return <Bar ref={ref} className={cn("stroke-primary", className)} fill={fill} {...props} />
+  },
+)
+ChartBar.displayName = "ChartBar"
+
+const ChartLine = React.forwardRef<SVGSVGElement, LineProps>(({ className, dataKey, activeDot, ...props }, ref) => {
+  const { color } = Chart.useChart()
+
+  return (
+    <Line
+      ref={ref}
+      className={cn("stroke-primary", className)}
+      dataKey={dataKey}
+      activeDot={{
+        r: 6,
+        fill: "hsl(var(--background))",
+        stroke: `hsl(var(--chart-${color}))`,
+        strokeWidth: 2,
+        className: "drop-shadow-xl",
+        ...activeDot,
+      }}
+      {...props}
+    />
+  )
+})
+ChartLine.displayName = "ChartLine"
+
+const ChartPie = React.forwardRef<SVGSVGElement, PieProps>(({ className, ...props }, ref) => {
+  return <Pie ref={ref} className={cn("stroke-primary", className)} {...props} />
+})
+ChartPie.displayName = "ChartPie"
+
+export {
+  Chart,
+  ChartTooltipContent,
+  ChartLegendContent,
+  ChartCrosshair,
+  ChartAxis,
+  ChartBar,
+  ChartLine,
+  ChartPie,
+  BarChart,
+  LineChart,
+  PieChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+}
+export type { ChartConfig }

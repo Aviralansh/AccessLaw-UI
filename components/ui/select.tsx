@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
+import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -87,7 +88,7 @@ const SelectItem = React.forwardRef<
         <Check className="h-4 w-4" />
       </SelectPrimitive.ItemIndicator>
     </span>
-    {children}
+    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName

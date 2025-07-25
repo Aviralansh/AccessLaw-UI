@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server"
 
+export const maxDuration = 30
+
 export async function POST(req: Request) {
   try {
     const { query, response, document_type, user_details } = await req.json()
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
-    const hfToken = process.env.NEXT_PUBLIC_HF_TOKEN
-
-    if (!backendUrl || !hfToken) {
-      return NextResponse.json({ error: "Backend URL or HuggingFace Token not configured" }, { status: 500 })
+    if (!process.env.NEXT_PUBLIC_BACKEND_URL || !process.env.NEXT_PUBLIC_HF_TOKEN) {
+      return NextResponse.json({ error: "Backend URL or Hugging Face Token not configured." }, { status: 500 })
     }
 
-    const docResponse = await fetch(`${backendUrl}/doc/gen-doc`, {
+    const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doc/gen-doc`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${hfToken}`,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_HF_TOKEN}`,
       },
       body: JSON.stringify({
         query,
@@ -25,19 +24,21 @@ export async function POST(req: Request) {
       }),
     })
 
-    if (!docResponse.ok) {
-      const errorText = await docResponse.text() // Read as text if not OK
-      console.error("Backend document generation error:", errorText)
+    if (!backendResponse.ok) {
+      const errorData = await backendResponse.json()
       return NextResponse.json(
-        { error: errorText || "Backend document generation failed" },
-        { status: docResponse.status },
+        { error: `Backend document generation failed: ${errorData.detail || backendResponse.statusText}` },
+        { status: backendResponse.status },
       )
     }
 
-    const result = await docResponse.json()
+    const result = await backendResponse.json()
     return NextResponse.json(result)
   } catch (error) {
     console.error("Error in generate-document API route:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 })
   }
 }

@@ -232,6 +232,7 @@
 .prose h6 {
   color: inherit;
   font-family: inherit;
+  @apply font-bold;
 }
 
 .prose p,
@@ -244,11 +245,13 @@
 .prose code {
   color: inherit;
   font-family: inherit;
+  @apply bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-1 py-0.5 rounded;
 }
 
 .prose pre {
   background-color: hsl(var(--muted));
   color: inherit;
+  @apply bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded;
 }
 
 .prose strong {
@@ -258,6 +261,26 @@
 
 .prose em {
   color: inherit;
+}
+
+.prose a {
+  @apply text-blue-600 dark:text-blue-400 hover:underline;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-gray-300 dark:border-gray-700 pl-4 italic text-gray-700 dark:text-gray-300;
+}
+
+.prose ul {
+  @apply list-disc list-inside;
+}
+
+.prose ol {
+  @apply list-decimal list-inside;
+}
+
+.prose li {
+  @apply mb-1;
 }
 
 /* Enhanced hover effects */

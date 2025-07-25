@@ -1,14 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { X } from "lucide-react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 
-const { ToastProvider } = useToast()
+const ToastProvider = ToastPrimitives.Provider
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
@@ -97,4 +96,18 @@ const ToastDescription = React.forwardRef<
 ))
 ToastDescription.displayName = ToastPrimitives.Description.displayName
 
-export { Toast, ToastProvider, ToastViewport, ToastClose, ToastTitle, ToastDescription, ToastAction }
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
+
+type ToastActionElement = React.ReactElement<typeof ToastAction>
+
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
+}

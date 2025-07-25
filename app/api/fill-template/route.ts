@@ -1,125 +1,95 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createOpenAI } from "@ai-sdk/openai"
 import { generateText } from "ai"
+import { openai } from "@ai-sdk/openai"
+import { NextResponse } from "next/server"
+import { z } from "zod"
 
-const openai = createOpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL,
-    "X-Title": "AccessLaw RAG Chat",
-  },
-})
+export const maxDuration = 30
 
-export async function POST(request: NextRequest) {
+const documentSchemas: { [key: string]: z.ZodObject<any> } = {
+  legal_notice: z.object({
+    sender_name: z.string().describe("Name of the sender"),
+    sender_address: z.string().describe("Address of the sender"),
+    recipient_name: z.string().describe("Name of the recipient"),
+    recipient_address: z.string().describe("Address of the recipient"),
+    date: z.string().describe("Date of the notice (YYYY-MM-DD)"),
+    subject: z.string().describe("Subject of the legal notice"),
+    incident_date: z.string().describe("Date of the incident (YYYY-MM-DD)"),
+    incident_description: z.string().describe("Detailed description of the incident"),
+    relief_requested: z.string().describe("Specific relief or action requested"),
+    legal_basis: z.string().describe("Legal basis for the claim"),
+    signature: z.string().describe("Name of the sender for signature"),
+  }),
+  rental_agreement: z.object({
+    landlord_name: z.string().describe("Name of the landlord"),
+    landlord_address: z.string().describe("Address of the landlord"),
+    tenant_name: z.string().describe("Name of the tenant"),
+    tenant_address: z.string().describe("Address of the tenant"),
+    property_address: z.string().describe("Address of the rental property"),
+    rent_amount: z.string().describe("Monthly rent amount"),
+    security_deposit: z.string().describe("Security deposit amount"),
+    lease_start_date: z.string().describe("Lease start date (YYYY-MM-DD)"),
+    lease_end_date: z.string().describe("Lease end date (YYYY-MM-DD)"),
+    terms_and_conditions: z.string().describe("Key terms and conditions of the agreement"),
+  }),
+  fir_draft: z.object({
+    complainant_name: z.string().describe("Name of the complainant"),
+    complainant_address: z.string().describe("Address of the complainant"),
+    incident_date: z.string().describe("Date of the incident (YYYY-MM-DD)"),
+    incident_time: z.string().describe("Time of the incident (HH:MM)"),
+    incident_location: z.string().describe("Location where the incident occurred"),
+    offense_description: z.string().describe("Detailed description of the offense"),
+    accused_details: z.string().describe("Details of the accused, if known"),
+    witness_details: z.string().describe("Details of any witnesses, if any"),
+    police_station: z.string().describe("Name of the police station"),
+  }),
+  rti_application: z.object({
+    applicant_name: z.string().describe("Name of the applicant"),
+    applicant_address: z.string().describe("Address of the applicant"),
+    public_authority_name: z.string().describe("Name of the Public Authority"),
+    public_authority_address: z.string().describe("Address of the Public Authority"),
+    subject_matter: z.string().describe("Subject matter of the information requested"),
+    period_of_information: z.string().describe("Period for which information is requested"),
+    details_of_information: z.string().describe("Specific details of the information required"),
+    declaration: z.string().describe("Declaration by the applicant"),
+    date: z.string().describe("Date of application (YYYY-MM-DD)"),
+  }),
+  affidavit: z.object({
+    deponent_name: z.string().describe("Name of the deponent"),
+    deponent_address: z.string().describe("Address of the deponent"),
+    deponent_age: z.string().describe("Age of the deponent"),
+    deponent_occupation: z.string().describe("Occupation of the deponent"),
+    statement_of_facts: z.string().describe("Detailed statement of facts being affirmed"),
+    date: z.string().describe("Date of affidavit (YYYY-MM-DD)"),
+    place: z.string().describe("Place where affidavit is sworn"),
+  }),
+}
+
+export async function POST(req: Request) {
   try {
-    const { query, response, documentType } = await request.json()
+    const { query, response, documentType } = await req.json()
 
-    if (!query || !response || !documentType) {
-      return NextResponse.json({ error: "Missing required fields: query, response, or documentType" }, { status: 400 })
+    const schema = documentSchemas[documentType]
+    if (!schema) {
+      return NextResponse.json({ error: "Invalid document type" }, { status: 400 })
     }
 
-    // Get template fields from backend first
-    const templateResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doc/get-template`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
-      },
-      body: JSON.stringify({
-        document_type: documentType,
-      }),
+    const { object: filledFields } = await generateText({
+      model: openai("gpt-4o"),
+      prompt: `Based on the following user query and AI response, extract the relevant information to fill the fields for a ${documentType.replace("_", " ")}.
+      
+      User Query: ${query}
+      AI Response: ${response}
+      
+      Extract the following fields. If a field is not explicitly mentioned or cannot be inferred, leave it as an empty string. Ensure dates are in YYYY-MM-DD format and times in HH:MM format.`,
+      schema: schema,
     })
 
-    if (!templateResponse.ok) {
-      const errorText = await templateResponse.text() // Read as text if not OK
-      throw new Error(
-        `Failed to get template: ${templateResponse.status} - ${errorText || templateResponse.statusText}`,
-      )
-    }
-
-    const templateData = await templateResponse.json()
-    const templateFields = templateData.template_fields || {}
-
-    // Define a prompt to instruct the LLM to extract fields
-    const prompt = `You are an expert legal assistant. Based on the user's query, the AI's response, and the specified legal document type, extract all relevant information to fill out the fields for the document.
-    
-    The document type is: "${documentType}".
-    
-    User Query: "${query}"
-    
-    AI Response: "${response}"
-    
-    Please provide the extracted information as a JSON object where keys are the field names (in snake_case, e.g., "party_name", "address", "date_of_incident") and values are the extracted data. If a field cannot be confidently extracted, leave its value as an empty string.
-    
-    Example for a "legal_notice" document:
-    {
-      "sender_name": "John Doe",
-      "sender_address": "123 Main St, Anytown",
-      "recipient_name": "Jane Smith",
-      "recipient_address": "456 Oak Ave, Othertown",
-      "date_of_notice": "2023-10-26",
-      "subject": "Regarding unpaid rent",
-      "details_of_claim": "Ms. Smith has failed to pay rent for the months of August, September, and October 2023, totaling $3000.",
-      "action_demanded": "Payment of $3000 within 7 days.",
-      "consequences": "Legal action will be initiated if payment is not received.",
-      "signature": ""
-    }
-    
-    Example for an "fir_draft" document:
-    {
-      "complainant_name": "Rahul Sharma",
-      "complainant_address": "Flat 101, Green Apartments, Delhi",
-      "complainant_contact": "9876543210",
-      "incident_date": "2023-10-25",
-      "incident_time": "14:30",
-      "incident_location": "Market Road, Near Central Park",
-      "facts_of_incident": "While walking, my phone was snatched by two individuals on a motorcycle. They fled towards the highway.",
-      "stolen_items": "One iPhone 13, black, serial number ABC123XYZ",
-      "witness_details": "None",
-      "requested_action": "Investigation and recovery of stolen property."
-    }
-    
-    Now, extract the fields for the "${documentType}" document based on the provided context:
-    `
-
-    const { text } = await generateText({
-      model: openai("deepseek-ai/deepseek-coder"), // Using DeepSeek Coder for structured output
-      prompt: prompt,
-      temperature: 0.2, // Keep temperature low for factual extraction
-    })
-
-    let filledFields: Record<string, string> = {}
-    try {
-      // Attempt to parse the JSON output from the LLM
-      // The LLM might wrap the JSON in markdown code blocks, so try to extract it
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/)
-      if (jsonMatch && jsonMatch[1]) {
-        filledFields = JSON.parse(jsonMatch[1])
-      } else {
-        filledFields = JSON.parse(text) // Fallback if not wrapped in markdown
-      }
-    } catch (parseError) {
-      console.error("Failed to parse LLM response as JSON:", parseError)
-      // Fallback: If parsing fails, create basic fields with placeholder values
-      Object.keys(templateFields).forEach((field) => {
-        filledFields[field] = `[Enter ${field.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}]`
-      })
-    }
-
-    // Merge with template fields to ensure all fields are present
-    const finalFields = { ...templateFields, ...filledFields }
-
-    return NextResponse.json({
-      success: true,
-      fields: finalFields,
-      documentType,
-    })
+    return NextResponse.json({ fields: filledFields })
   } catch (error) {
-    console.error("Fill template error:", error)
-    return NextResponse.json(
-      { error: `Failed to fill template: ${error instanceof Error ? error.message : "Unknown error"}` },
-      { status: 500 },
-    )
+    console.error("Error filling template with LLM:", error)
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 })
   }
 }

@@ -4,6 +4,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { type VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import { ResizablePanel } from "react-resizable-panels"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -224,16 +225,15 @@ const SidebarComponent = React.forwardRef<
 )
 SidebarComponent.displayName = "SidebarComponent"
 
-const Sidebar = ({ className, isCollapsed, children }: any) => {
+interface SidebarProps extends React.ComponentProps<typeof ResizablePanel> {
+  className?: string
+}
+
+function Sidebar({ className, children, ...props }: SidebarProps) {
   return (
-    <div
-      data-collapsed={isCollapsed}
-      className={cn("group flex flex-col gap-4 py-2 data-[collapsed=true]:py-2", className)}
-    >
-      <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center group-[[data-collapsed=true]]:px-2">
-        {children}
-      </nav>
-    </div>
+    <ResizablePanel className={cn("hidden lg:flex flex-col h-full", className)} {...props}>
+      {children}
+    </ResizablePanel>
   )
 }
 

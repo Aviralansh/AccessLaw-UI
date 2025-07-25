@@ -1,22 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMediaQuery } from "usehooks-ts"
 
 export function useMobile() {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768) // Adjust breakpoint as needed
-    }
-
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-
-    return () => {
-      window.removeEventListener("resize", checkMobile)
-    }
-  }, [])
-
-  return isMobile
+  return useMediaQuery("(max-width: 768px)")
 }
