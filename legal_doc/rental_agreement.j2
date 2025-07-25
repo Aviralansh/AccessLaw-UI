@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Agreement</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin: 20px 0;
+            text-align: justify;
+        }
+        .section {
+            margin: 15px 0;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .clause {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">RENTAL AGREEMENT</div>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <p><strong>This Rental Agreement</strong> is made on <strong>{{ current_date }}</strong> between:</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">LANDLORD (LESSOR):</div>
+            <p><strong>{{ landlord_name | default('[Landlord Name]') }}</strong><br>
+            Son/Daughter of {{ landlord_father_name | default('[Landlord Father Name]') }}<br>
+            Address: {{ landlord_address | default('[Landlord Address]') }}<br>
+            Phone: {{ landlord_phone | default('[Landlord Phone]') }}<br>
+            (Hereinafter referred to as "LANDLORD")</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">TENANT (LESSEE):</div>
+            <p><strong>{{ tenant_name | default('[Tenant Name]') }}</strong><br>
+            Son/Daughter of {{ tenant_father_name | default('[Tenant Father Name]') }}<br>
+            Address: {{ tenant_address | default('[Tenant Address]') }}<br>
+            Phone: {{ tenant_phone | default('[Tenant Phone]') }}<br>
+            (Hereinafter referred to as "TENANT")</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">PROPERTY DETAILS:</div>
+            <p><strong>Property Address:</strong> {{ property_address | default('[Complete Property Address]') }}<br>
+            <strong>Property Type:</strong> {{ property_type | default('[Apartment/House/Commercial Space]') }}<br>
+            <strong>Area:</strong> {{ property_area | default('[Area in sq ft]') }}<br>
+            <strong>Furnishing:</strong> {{ furnishing_details | default('[Furnished/Semi-furnished/Unfurnished]') }}</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">TERMS AND CONDITIONS:</div>
+            
+            <div class="clause">
+                <strong>1. RENTAL AMOUNT:</strong> The monthly rent for the said property is Rs. {{ monthly_rent | default('[Monthly Rent Amount]') }} (Rupees {{ monthly_rent_words | default('[Amount in Words]') }} only), payable on or before {{ rent_due_date | default('[Due Date]') }} of each month.
+            </div>
+
+            <div class="clause">
+                <strong>2. SECURITY DEPOSIT:</strong> The Tenant shall pay a security deposit of Rs. {{ security_deposit | default('[Security Deposit Amount]') }} which shall be refunded at the time of vacating the premises, subject to deductions for any damages or outstanding dues.
+            </div>
+
+            <div class="clause">
+                <strong>3. LEASE PERIOD:</strong> This agreement is for a period of {{ lease_duration | default('[Duration]') }} commencing from {{ lease_start_date | default('[Start Date]') }} to {{ lease_end_date | default('[End Date]') }}.
+            </div>
+
+            <div class="clause">
+                <strong>4. UTILITIES:</strong> {{ utilities_clause | default('The Tenant shall be responsible for payment of electricity, water, gas, internet, and other utility bills. The Landlord shall provide the necessary connections.') }}
+            </div>
+
+            <div class="clause">
+                <strong>5. MAINTENANCE:</strong> {{ maintenance_clause | default('Minor repairs and maintenance shall be borne by the Tenant. Major structural repairs shall be the responsibility of the Landlord.') }}
+            </div>
+
+            <div class="clause">
+                <strong>6. USE OF PREMISES:</strong> The premises shall be used only for {{ property_use | default('residential') }} purposes. The Tenant shall not use the premises for any illegal activities.
+            </div>
+
+            <div class="clause">
+                <strong>7. SUBLETTING:</strong> The Tenant shall not sublet or assign the premises to any third party without prior written consent of the Landlord.
+            </div>
+
+            <div class="clause">
+                <strong>8. TERMINATION:</strong> Either party may terminate this agreement by giving {{ notice_period | default('30') }} days written notice to the other party.
+            </div>
+
+            <div class="clause">
+                <strong>9. RENEWAL:</strong> This agreement may be renewed by mutual consent of both parties with revised terms if any.
+            </div>
+
+            <div class="clause">
+                <strong>10. LEGAL JURISDICTION:</strong> Any disputes arising out of this agreement shall be subject to the jurisdiction of courts in {{ jurisdiction | default('[City Name]') }}.
+            </div>
+        </div>
+
+        <div class="section">
+            <p><strong>IN WITNESS WHEREOF,</strong> both parties have executed this agreement on the date mentioned above.</p>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    <div>{{ landlord_name | default('[Landlord Name]') }}</div>
+                    <div>(Landlord)</div>
+                </div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">
+                    <div>{{ tenant_name | default('[Tenant Name]') }}</div>
+                    <div>(Tenant)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" style="margin-top: 50px;">
+            <div class="section-title">WITNESSES:</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <div>{{ witness1_name | default('[Witness 1 Name]') }}</div>
+                        <div>Witness 1</div>
+                        <div>{{ witness1_address | default('[Witness 1 Address]') }}</div>
+                    </div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <div>{{ witness2_name | default('[Witness 2 Name]') }}</div>
+                        <div>Witness 2</div>
+                        <div>{{ witness2_address | default('[Witness 2 Address]') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

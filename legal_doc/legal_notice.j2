@@ -1,60 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Notice</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin: 20px 0;
+            text-align: justify;
+        }
+        .section {
+            margin: 15px 0;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        .date-place {
+            margin: 20px 0;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        LEGAL NOTICE
+        <div class="title">LEGAL NOTICE</div>
+        <div>Under Section 138 of the Negotiable Instruments Act, 1881</div>
     </div>
-    
+
     <div class="content">
-        <p><strong>To:</strong><br>
-        {{ recipient_name }}<br>
-        {{ recipient_address }}</p>
-        
-        <p><strong>From:</strong><br>
-        {{ sender_name }}<br>
-        {{ sender_address }}<br>
-        Phone: {{ sender_phone }}<br>
-        Email: {{ sender_email }}</p>
-        
-        <p><strong>Subject:</strong> {{ subject }}</p>
-        
-        <p>Sir/Madam,</p>
-        
-        <p>TAKE NOTICE that my client has instructed me to serve upon you the following legal notice:</p>
-        
-        <div class="content">
-            <p><strong>FACTS:</strong></p>
-            <p>{{ facts }}</p>
+        <div class="section">
+            <div class="section-title">TO:</div>
+            <p><strong>{{ recipient_name | default('[Recipient Name]') }}</strong><br>
+            {{ recipient_address | default('[Recipient Address]') }}</p>
         </div>
-        
-        <div class="content">
+
+        <div class="section">
+            <div class="section-title">FROM:</div>
+            <p><strong>{{ sender_name | default('[Your Name]') }}</strong><br>
+            {{ sender_address | default('[Your Address]') }}<br>
+            Phone: {{ sender_phone | default('[Your Phone Number]') }}<br>
+            Email: {{ sender_email | default('[Your Email]') }}</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">SUBJECT: {{ subject | default('Legal Notice for Recovery of Amount') }}</div>
+        </div>
+
+        <div class="section">
+            <p><strong>Sir/Madam,</strong></p>
+            
+            <p>I, {{ sender_name | default('[Your Name]') }}, through this legal notice, hereby call upon you to pay the amount of <strong>Rs. {{ amount | default('[Amount]') }}</strong> within 15 days from the receipt of this notice.</p>
+            
+            <p><strong>FACTS OF THE CASE:</strong></p>
+            <p>{{ case_facts | default('The facts of the case are as follows: [Describe the circumstances that led to this legal notice, including dates, agreements, transactions, or incidents that form the basis of your claim.]') }}</p>
+            
+            <p><strong>LEGAL GROUNDS:</strong></p>
+            <p>{{ legal_grounds | default('Your actions constitute a breach of contract/agreement and you are legally liable to pay the aforementioned amount. The legal provisions applicable to this case include relevant sections of the Indian Contract Act, 1872, and other applicable laws.') }}</p>
+            
             <p><strong>DEMAND:</strong></p>
-            <p>{{ demand }}</p>
+            <p>You are hereby called upon to pay the amount of Rs. {{ amount | default('[Amount]') }} within 15 days from the receipt of this notice, failing which legal proceedings shall be initiated against you for recovery of the said amount along with interest and costs.</p>
+            
+            <p><strong>CONSEQUENCES OF NON-COMPLIANCE:</strong></p>
+            <p>Please take note that if you fail to comply with this notice within the stipulated time, I shall be constrained to initiate appropriate legal proceedings against you for recovery of the amount, damages, interest, and costs, without any further notice to you.</p>
+            
+            <p>This notice is issued without prejudice to any other rights and remedies available to me in law.</p>
         </div>
-        
-        <p>TAKE FURTHER NOTICE that if you fail to comply with the above demand within {{ time_limit }} from the receipt of this notice, my client will be constrained to take appropriate legal action against you including but not limited to:</p>
-        
-        <div class="content">
-            <p>{{ consequences }}</p>
+
+        <div class="date-place">
+            <p><strong>Date:</strong> {{ current_date }}</p>
+            <p><strong>Place:</strong> {{ place | default('[Your City]') }}</p>
         </div>
-        
-        <p>You are hereby called upon to comply with the above demand within the stipulated time to avoid unnecessary litigation and costs.</p>
-        
-        <p>This notice is served upon you under Section 80 of the Code of Civil Procedure, 1908, and other applicable provisions of law.</p>
-    </div>
-    
-    <div class="date-place">
-        <p>Date: {{ date }}<br>
-        Place: {{ place }}</p>
-    </div>
-    
-    <div class="signature">
-        <p>Yours faithfully,<br><br>
-        {{ sender_name }}</p>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    <div>{{ sender_name | default('[Your Name]') }}</div>
+                    <div>(Sender)</div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

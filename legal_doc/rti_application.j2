@@ -1,55 +1,162 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RTI Application</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin: 20px 0;
+            text-align: justify;
+        }
+        .section {
+            margin: 15px 0;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .form-field {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .field-label {
+            font-weight: bold;
+            min-width: 200px;
+            margin-right: 10px;
+        }
+        .field-value {
+            flex: 1;
+            border-bottom: 1px dotted #000;
+            min-height: 20px;
+            padding: 2px 5px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        APPLICATION UNDER RIGHT TO INFORMATION ACT, 2005
+        <div class="title">APPLICATION UNDER RIGHT TO INFORMATION ACT, 2005</div>
     </div>
-    
+
     <div class="content">
-        <p><strong>To:</strong><br>
-        {{ pio_name }}<br>
-        Public Information Officer<br>
-        {{ department_name }}<br>
-        {{ department_address }}</p>
-        
-        <p><strong>Subject:</strong> Application for information under Right to Information Act, 2005</p>
-        
-        <p>Sir/Madam,</p>
-        
-        <p>I, {{ applicant_name }}, resident of {{ applicant_address }}, hereby request the following information under the Right to Information Act, 2005:</p>
-        
-        <div class="content">
-            <p><strong>Information Requested:</strong></p>
-            <p>{{ information_requested }}</p>
+        <div class="section">
+            <div class="section-title">TO:</div>
+            <p><strong>The Public Information Officer</strong><br>
+            {{ department_name | default('[Name of Department/Office]') }}<br>
+            {{ department_address | default('[Address of Department/Office]') }}</p>
         </div>
-        
-        <div class="content">
-            <p><strong>Purpose:</strong></p>
-            <p>{{ purpose }}</p>
+
+        <div class="section">
+            <div class="section-title">APPLICANT DETAILS:</div>
+            <div class="form-field">
+                <div class="field-label">Name:</div>
+                <div class="field-value">{{ applicant_name | default('[Your Full Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Address:</div>
+                <div class="field-value">{{ applicant_address | default('[Your Complete Address]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Phone Number:</div>
+                <div class="field-value">{{ phone_number | default('[Your Phone Number]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Email:</div>
+                <div class="field-value">{{ email | default('[Your Email Address]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Date of Application:</div>
+                <div class="field-value">{{ current_date }}</div>
+            </div>
         </div>
-        
-        <p>I am enclosing the application fee as prescribed under the RTI Act, 2005. Please provide the information within the stipulated time frame of 30 days as per the Act.</p>
-        
-        <p>In case the information sought is not available with your office, please transfer this application to the concerned department and inform me accordingly.</p>
-        
-        <p>Thanking you,</p>
-    </div>
-    
-    <div class="date-place">
-        <p>Date: {{ date }}<br>
-        Place: {{ place }}</p>
-    </div>
-    
-    <div class="signature">
-        <p>Yours faithfully,<br><br>
-        {{ applicant_name }}<br>
-        Address: {{ applicant_address }}<br>
-        Phone: {{ applicant_phone }}<br>
-        Email: {{ applicant_email }}</p>
+
+        <div class="section">
+            <div class="section-title">SUBJECT: {{ subject | default('Application for Information under RTI Act, 2005') }}</div>
+        </div>
+
+        <div class="section">
+            <p><strong>Sir/Madam,</strong></p>
+            
+            <p>I, {{ applicant_name | default('[Your Name]') }}, a citizen of India, hereby request the following information under the Right to Information Act, 2005:</p>
+            
+            <div class="section-title">INFORMATION REQUESTED:</div>
+            <p>{{ information_requested | default('1. [Specify the exact information you need]\n2. [Be specific about documents, records, or data required]\n3. [Mention time period if applicable]\n4. [Any other relevant details]') }}</p>
+            
+            <div class="section-title">PURPOSE:</div>
+            <p>{{ purpose | default('The information is required for [mention the purpose - personal use, research, public interest, etc.]') }}</p>
+            
+            <div class="section-title">MODE OF RECEIVING INFORMATION:</div>
+            <p>{{ delivery_mode | default('Please provide the information in the following mode: [Hard copy/Email/Inspection of records]') }}</p>
+            
+            <p>I am enclosing an application fee of Rs. {{ application_fee | default('10') }} as prescribed under the RTI Act, 2005.</p>
+            
+            <p>If the information sought is not available with your office, kindly transfer this application to the concerned Public Information Officer under Section 6(3) of the RTI Act and inform me accordingly.</p>
+            
+            <p>If any additional fee is required, please inform me in advance with proper justification as per the RTI Act provisions.</p>
+            
+            <p>I request you to provide the information within the statutory period of 30 days as prescribed under Section 7(1) of the RTI Act, 2005.</p>
+        </div>
+
+        <div class="section">
+            <p><strong>Thanking you,</strong></p>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    <div>{{ applicant_name | default('[Your Name]') }}</div>
+                    <div>(Applicant)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" style="margin-top: 30px;">
+            <div class="section-title">ENCLOSURES:</div>
+            <p>1. Application fee of Rs. {{ application_fee | default('10') }}<br>
+            2. {{ additional_documents | default('Any supporting documents (if applicable)') }}</p>
+        </div>
     </div>
 </body>
 </html>

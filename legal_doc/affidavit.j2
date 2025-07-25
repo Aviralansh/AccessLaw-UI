@@ -1,57 +1,174 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Affidavit</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin: 20px 0;
+            text-align: justify;
+        }
+        .section {
+            margin: 15px 0;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .form-field {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .field-label {
+            font-weight: bold;
+            min-width: 150px;
+            margin-right: 10px;
+        }
+        .field-value {
+            flex: 1;
+            border-bottom: 1px dotted #000;
+            min-height: 20px;
+            padding: 2px 5px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        .verification {
+            margin-top: 30px;
+            border: 1px solid #000;
+            padding: 15px;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .center {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        AFFIDAVIT
+        <div class="title">AFFIDAVIT</div>
     </div>
-    
+
     <div class="content">
-        <p>I, {{ deponent_name }}, aged {{ deponent_age }} years, {{ deponent_occupation }}, resident of {{ deponent_address }}, do hereby solemnly affirm and state as under:</p>
-        
-        <div class="content">
-            <p><strong>1.</strong> That I am the deponent in the above matter and I am competent to swear this affidavit.</p>
-            
-            <p><strong>2.</strong> That the facts stated herein are true and correct to the best of my knowledge and belief and nothing material has been concealed therefrom.</p>
-            
-            {% if case_details %}
-            <p><strong>3.</strong> That this affidavit is being filed in connection with {{ case_details }}.</p>
-            {% endif %}
-            
-            <p><strong>4.</strong> {{ statement_facts }}</p>
-            
-            <p><strong>5.</strong> That this affidavit is made for the purpose of {{ purpose }}.</p>
-            
-            <p><strong>6.</strong> That I undertake to produce the original documents for verification whenever required.</p>
+        <div class="section">
+            <p class="center"><strong>BEFORE THE {{ authority | default('[Name of Authority/Court]') }}</strong></p>
         </div>
-        
-        <p>I do hereby solemnly affirm that the contents of this affidavit are true and correct and nothing has been concealed or misstated therein.</p>
-        
-        <p>Affirmed at {{ place }} on this {{ date }}.</p>
-    </div>
-    
-    <div class="signature">
-        <p><br><br>
-        ________________________<br>
-        {{ deponent_name }}<br>
-        (Deponent)</p>
-    </div>
-    
-    <div class="content">
-        <p><strong>VERIFICATION:</strong></p>
-        <p>I, {{ deponent_name }}, do hereby verify that the contents of the above affidavit are true and correct to the best of my knowledge and belief and no part of it is false and nothing material has been concealed therefrom.</p>
-        
-        <p>Verified at {{ place }} on {{ date }}.</p>
-    </div>
-    
-    <div class="signature">
-        <p><br><br>
-        ________________________<br>
-        {{ deponent_name }}<br>
-        (Deponent)</p>
+
+        <div class="section">
+            <div class="section-title">DEPONENT DETAILS:</div>
+            <div class="form-field">
+                <div class="field-label">Name:</div>
+                <div class="field-value">{{ deponent_name | default('[Your Full Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Father's Name:</div>
+                <div class="field-value">{{ father_name | default('[Father\'s Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Age:</div>
+                <div class="field-value">{{ age | default('[Your Age]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Occupation:</div>
+                <div class="field-value">{{ occupation | default('[Your Occupation]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Address:</div>
+                <div class="field-value">{{ deponent_address | default('[Your Complete Address]') }}</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <p><strong>I, {{ deponent_name | default('[Your Name]') }}, son/daughter of {{ father_name | default('[Father\'s Name]') }}, aged {{ age | default('[Age]') }} years, resident of {{ deponent_address | default('[Your Address]') }}, do hereby solemnly affirm and state as under:</strong></p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">STATEMENT OF FACTS:</div>
+            <p>{{ statement_of_facts | default('1. That I am the deponent of this affidavit and I have personal knowledge of the facts stated herein.\n\n2. That [state the relevant facts and circumstances that form the basis of this affidavit].\n\n3. That [continue with additional facts as necessary].\n\n4. That the facts stated above are true to the best of my knowledge and belief.') }}</p>
+        </div>
+
+        <div class="section">
+            <p><strong>That the contents of this affidavit are true to the best of my knowledge and belief and nothing material has been concealed therefrom.</strong></p>
+        </div>
+
+        <div class="section">
+            <p><strong>Date:</strong> {{ current_date }}<br>
+            <strong>Place:</strong> {{ place | default('[Your City]') }}</p>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    <div>{{ deponent_name | default('[Your Name]') }}</div>
+                    <div>(Deponent)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="verification">
+            <div class="section-title center">VERIFICATION</div>
+            <p>I, {{ deponent_name | default('[Your Name]') }}, the deponent above named, do hereby verify that the contents of the above affidavit are true to the best of my knowledge and belief and no part of it is false and nothing material has been concealed therefrom.</p>
+            
+            <p><strong>Verified at {{ place | default('[Your City]') }} on this {{ current_date }}.</strong></p>
+            
+            <div style="margin-top: 30px; text-align: right;">
+                <div style="border-top: 1px solid #000; width: 200px; margin-left: auto; padding-top: 5px; text-align: center;">
+                    {{ deponent_name | default('[Your Name]') }}<br>
+                    (Deponent)
+                </div>
+            </div>
+        </div>
+
+        <div class="section" style="margin-top: 30px;">
+            <div class="section-title">NOTARIZATION:</div>
+            <p><strong>Sworn before me and signed in my presence on {{ current_date }} at {{ place | default('[Your City]') }}.</strong></p>
+            
+            <div style="margin-top: 30px; text-align: right;">
+                <div style="border-top: 1px solid #000; width: 200px; margin-left: auto; padding-top: 5px; text-align: center;">
+                    Notary Public<br>
+                    (Signature & Seal)
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

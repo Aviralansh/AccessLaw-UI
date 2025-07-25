@@ -7,15 +7,18 @@ from contextlib import asynccontextmanager
 import base64
 
 # FastAPI components
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 import uvicorn
 
 # Import the enhanced embedder and document generator
-from embedd_constitution import EnhancedLegalDocumentEmbedder
-from doc import DocumentGenerator
+from doc import app as doc_app
+from sentence_transformers import SentenceTransformer
+import numpy as np
+import chromadb
+from chromadb.config import Settings
 
 # Configure logging
 logging.basicConfig(
@@ -29,15 +32,15 @@ logger = logging.getLogger(__name__)
 class Config:
     # ChromaDB settings
     DATA_ROOT: str = os.getenv("DATA_ROOT", "/data")
-    CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./legal_chroma_db")
-    CHROMA_COLLECTION_NAME: str = os.getenv("CHROMA_COLLECTION_NAME", "indian_laws_v2")
+    CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+    CHROMA_COLLECTION_NAME: str = os.getenv("CHROMA_COLLECTION_NAME", "legal_documents")
     
     # Server settings
     SERVER_HOST: str = os.getenv("SERVER_HOST", "0.0.0.0")
-    SERVER_PORT: int = int(os.getenv("SERVER_PORT", "7860"))
+    SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8000"))
     
     # Search settings - memory efficient defaults
-    DEFAULT_TOP_K: int = int(os.getenv("DEFAULT_TOP_K", "2"))
+    DEFAULT_TOP_K: int = int(os.getenv("DEFAULT_TOP_K", "3"))
     MAX_TOP_K: int = int(os.getenv("MAX_TOP_K", "10"))
 
 config = Config()
@@ -60,7 +63,8 @@ class SearchResult(BaseModel):
     
 class RootResponse(BaseModel):
     message: str
-    status: str
+    version: str
+    endpoints: Dict[str, str]
 
 class SearchResponse(BaseModel):
     results: List[SearchResult]
@@ -99,52 +103,50 @@ class DocumentTypeRequest(BaseModel):
     response: str
 
 # Global instances
-embedder = None
-doc_generator = None
+embedding_model = None
+chroma_client = None
+collection = None
 
-# Lifespan context manager for startup/shutdown
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    global embedder, doc_generator
-    logger.info("Starting Enhanced Legal Search API...")
+# Initialize embedding model
+try:
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    logger.info("Embedding model loaded successfully")
+except Exception as e:
+    logger.error(f"Failed to load embedding model: {e}")
+    embedding_model = None
+
+# Initialize ChromaDB client
+try:
+    chroma_client = chromadb.Client(Settings(
+        chroma_db_impl="duckdb+parquet",
+        persist_directory=config.CHROMA_PERSIST_DIR
+    ))
+    collection = chroma_client.get_or_create_collection(
+        name=config.CHROMA_COLLECTION_NAME,
+        metadata={"hnsw:space": "cosine"}
+    )
+    logger.info("ChromaDB initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize ChromaDB: {e}")
+    collection = None
+
+def get_embedding(text: str) -> List[float]:
+    """Generate embedding for given text"""
+    if embedding_model is None:
+        raise HTTPException(status_code=500, detail="Embedding model not available")
     
     try:
-        embedder = EnhancedLegalDocumentEmbedder(
-            data_root=config.DATA_ROOT,
-            collection_name=config.CHROMA_COLLECTION_NAME,
-            persist_directory=config.CHROMA_PERSIST_DIR
-        )
-        
-        # Initialize document generator
-        doc_generator = DocumentGenerator()
-        
-        # Get collection info
-        collection_stats = embedder.get_collection_stats()
-        total_docs = collection_stats.get('total_chunks', 0)
-        
-        logger.info(f"Enhanced Legal Search Service initialized with {total_docs} document chunks")
-        logger.info("Document generation service initialized")
-        
+        embedding = embedding_model.encode(text)
+        return embedding.tolist()
     except Exception as e:
-        logger.error(f"Failed to initialize services: {str(e)}")
-        raise RuntimeError(f"Service initialization failed: {str(e)}")
-    
-    logger.info("API startup complete")
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down Enhanced Legal Search API...")
-    embedder = None
-    doc_generator = None
-    logger.info("API shutdown complete")
+        logger.error(f"Embedding generation failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate embedding")
 
 # FastAPI App
 app = FastAPI(
-    title="AccessLaw Document Generator API",
+    title="AccessLaw RAG API",
     description="Advanced API for searching Indian Legal Documents and generating legal documents",
-    version="2.1.0",
-    lifespan=lifespan
+    version="1.0.0"
 )
 
 app.add_middleware(
@@ -155,36 +157,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount the document generation app
+app.mount("/doc", doc_app)
+
 @app.get("/", response_model=RootResponse)
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "AccessLaw Document Generator API",
-        "status": "active"
+        "message": "AccessLaw RAG API",
+        "version": "1.0.0",
+        "endpoints": {
+            "/search": "Search legal documents",
+            "/health": "Health check",
+            "/doc/gen-doc": "Generate legal documents",
+            "/doc/detect-document-type": "Detect document type",
+            "/add-document": "Add a document to the knowledge base"
+        }
     }
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint."""
-    if not embedder:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    
-    try:
-        collection_info = embedder.get_collection_stats()
-        return HealthResponse(
-            status="healthy",
-            collection_name=config.CHROMA_COLLECTION_NAME,
-            total_documents=collection_info.get("total_chunks", 0),
-            server_time=datetime.now()
-        )
-    except Exception as e:
-        logger.error(f"Health check error: {str(e)}")
-        return HealthResponse(
-            status="error",
-            collection_name=config.CHROMA_COLLECTION_NAME,
-            total_documents=0,
-            server_time=datetime.now()
-        )
+    return {
+        "status": "healthy",
+        "collection_name": config.CHROMA_COLLECTION_NAME,
+        "total_documents": collection.count() if collection else 0,
+        "server_time": datetime.now()
+    }
 
 @app.post("/search", response_model=SearchResponse)
 async def search_documents(request: SearchRequest):
@@ -197,42 +196,53 @@ async def search_documents(request: SearchRequest):
     - Legal document structure-aware chunking
     - Optional metadata filtering
     """
-    if not embedder:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    
     start_time = datetime.now()
     
     try:
-        # Use the embedder's enhanced_query method directly
-        results = embedder.enhanced_query(
-            query_text=request.query,
+        if collection is None:
+            raise HTTPException(status_code=500, detail="Database not available")
+        
+        # Generate query embedding
+        query_embedding = get_embedding(request.query)
+        
+        # Prepare where clause for filtering
+        where_clause = None
+        if request.filters:
+            where_clause = request.filters
+        
+        # Search in ChromaDB
+        search_results = collection.query(
+            query_embeddings=[query_embedding],
             n_results=request.top_k or config.DEFAULT_TOP_K,
-            rerank=request.rerank or False,
-            filter_metadata=request.filters,
-            include_scores=request.include_scores or False
+            where=where_clause,
+            include=['documents', 'metadatas', 'distances']
         )
         
+        # Process results
+        results = []
+        if search_results['documents'] and search_results['documents'][0]:
+            for i, (doc, metadata, distance) in enumerate(zip(
+                search_results['documents'][0],
+                search_results['metadatas'][0],
+                search_results['distances'][0]
+            )):
+                # Convert distance to similarity score (cosine similarity)
+                similarity_score = 1 - distance
+                
+                result = SearchResult(
+                    content=doc,
+                    metadata=metadata,
+                    similarity_score=similarity_score if request.include_scores else 0.0
+                )
+                results.append(result)
+        
+        # Calculate search time
         search_time = (datetime.now() - start_time).total_seconds()
         
-        # Format response
-        formatted_results = [
-            SearchResult(
-                content=result['text'],
-                metadata=result['metadata'],
-                similarity_score=result['similarity_score'],
-                rerank_score=result.get('rerank_score'),
-                combined_score=result.get('combined_score'),
-                scores=result.get('scores')
-            )
-            for result in results
-        ]
-        
-        logger.info(f"Search completed in {search_time:.3f}s, found {len(formatted_results)} results, asked: {request.query}")
-        
         return SearchResponse(
-            results=formatted_results,
+            results=results,
             query=request.query,
-            total_results=len(formatted_results),
+            total_results=len(results),
             search_time=search_time
         )
         
@@ -240,149 +250,49 @@ async def search_documents(request: SearchRequest):
         logger.error(f"Search error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
-@app.get("/collection/info")
-async def get_collection_info():
+@app.post("/add-document")
+async def add_document(
+    content: str,
+    metadata: Dict[str, Any],
+    document_id: Optional[str] = None
+):
     """
-    Get detailed information about the legal document collection.
+    Add a document to the knowledge base
     """
-    if not embedder:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    
     try:
-        stats = embedder.get_collection_stats()
+        if collection is None:
+            raise HTTPException(status_code=500, detail="Database not available")
+        
+        # Generate embedding
+        embedding = get_embedding(content)
+        
+        # Generate document ID if not provided
+        if document_id is None:
+            document_id = f"doc_{datetime.now().timestamp()}"
+        
+        # Add to collection
+        collection.add(
+            documents=[content],
+            embeddings=[embedding],
+            metadatas=[metadata],
+            ids=[document_id]
+        )
+        
         return {
-            "name": config.CHROMA_COLLECTION_NAME,
-            "document_count": stats.get('total_chunks', 0),
-            "document_types": stats.get('document_types', {}),
-            "legal_sources": stats.get('legal_sources', {}),
-            "status": "active"
+            "success": True,
+            "document_id": document_id,
+            "message": "Document added successfully"
         }
-    except Exception as e:
-        logger.error(f"Error getting collection info: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get collection info: {str(e)}")
-
-@app.get("/collection/stats")
-async def get_collection_stats():
-    """
-    Get detailed statistics about the legal document collection.
-    """
-    if not embedder:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-    
-    try:
-        return embedder.get_collection_stats()
-    except Exception as e:
-        logger.error(f"Error getting collection stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get collection stats: {str(e)}")
-
-# Document Generation Endpoints
-
-@app.get("/document-types", response_model=DocumentTypesResponse)
-async def get_document_types():
-    """
-    Get available document types for generation.
-    """
-    if not doc_generator:
-        raise HTTPException(status_code=503, detail="Document generation service not initialized")
-    
-    try:
-        doc_types = doc_generator.get_available_document_types()
-        return DocumentTypesResponse(
-            document_types=doc_types,
-            total_types=len(doc_types)
-        )
-    except Exception as e:
-        logger.error(f"Error getting document types: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get document types: {str(e)}")
-
-@app.post("/gen-doc")
-async def generate_document(request: DocumentRequest):
-    """
-    Generate legal document based on query and response context.
-    
-    This endpoint:
-    - Analyzes the query and response to determine appropriate document type
-    - Extracts relevant information to fill template fields
-    - Generates a PDF document using Jinja2 templates
-    - Returns the document with metadata
-    """
-    if not doc_generator:
-        raise HTTPException(status_code=503, detail="Document generation service not initialized")
-    
-    try:
-        logger.info(f"Generating document for query: {request.query[:100]}...")
-        
-        result = doc_generator.generate_document(
-            query=request.query,
-            response=request.response,
-            doc_type=request.document_type,
-            user_details=request.user_details,
-            dry_run=request.dry_run
-        )
-        
-        logger.info(f"Document generated successfully: {result.document_type} in {result.generation_time:.2f}s")
-        
-        return result
         
     except Exception as e:
-        logger.error(f"Document generation error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Document generation failed: {str(e)}")
-
-@app.post("/gen-doc/download")
-async def download_generated_document(request: DocumentRequest):
-    """
-    Generate and download legal document as PDF.
-    """
-    if not doc_generator:
-        raise HTTPException(status_code=503, detail="Document generation service not initialized")
-    
-    try:
-        result = doc_generator.generate_document(
-            query=request.query,
-            response=request.response,
-            doc_type=request.document_type,
-            user_details=request.user_details,
-            dry_run=request.dry_run
-        )
-        
-        return Response(
-            content=result.pdf_content,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename={result.filename}",
-                "Content-Type": "application/pdf"
-            }
-        )
-        
-    except Exception as e:
-        logger.error(f"Document download error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Document download failed: {str(e)}")
-
-@app.post("/detect-document-type")
-async def detect_document_type(request: DocumentTypeRequest):
-    """
-    Detect the type of legal document needed based on query and response
-    """
-    try:
-        detected_type = doc_generator.detect_document_type(request.query, request.response)
-        doc_info = doc_generator.document_types[detected_type]
-        
-        # Calculate confidence based on keyword matches
-        combined_text = f"{request.query} {request.response}".lower()
-        keyword_matches = sum(1 for keyword in doc_info['keywords'] if keyword.lower() in combined_text)
-        confidence = "high" if keyword_matches >= 2 else "medium" if keyword_matches >= 1 else "low"
-        
-        return DetectDocumentTypeResponse(
-            detected_type=detected_type,
-            document_name=doc_info['name'],
-            confidence=confidence
-        )
-        
-    except Exception as e:
-        logger.error(f"Document type detection error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Document type detection failed: {str(e)}")
+        logger.error(f"Failed to add document: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to add document: {str(e)}")
 
 if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host=config.SERVER_HOST,
+        port=config.SERVER" == "__main__":
     uvicorn.run(
         app,
         host=config.SERVER_HOST,

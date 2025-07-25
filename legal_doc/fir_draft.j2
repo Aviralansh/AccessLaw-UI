@@ -1,63 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIR Draft</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin: 20px 0;
+            text-align: justify;
+        }
+        .section {
+            margin: 15px 0;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 10px;
+        }
+        .form-field {
+            margin: 10px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .field-label {
+            font-weight: bold;
+            min-width: 150px;
+            margin-right: 10px;
+        }
+        .field-value {
+            flex: 1;
+            border-bottom: 1px dotted #000;
+            min-height: 20px;
+            padding: 2px 5px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        FIRST INFORMATION REPORT (FIR) DRAFT
+        <div class="title">FIRST INFORMATION REPORT (FIR)</div>
+        <div>Under Section 154 of the Code of Criminal Procedure, 1973</div>
     </div>
-    
+
     <div class="content">
-        <p><strong>To:</strong><br>
-        The Station House Officer<br>
-        {{ police_station }}</p>
-        
-        <p><strong>Subject:</strong> Complaint for registration of FIR</p>
-        
-        <p>Sir,</p>
-        
-        <p>I, {{ complainant_name }}, resident of {{ complainant_address }}, hereby lodge this complaint for registration of FIR regarding the following incident:</p>
-        
-        <div class="content">
-            <p><strong>Details of the Incident:</strong></p>
-            <p><strong>Date of Incident:</strong> {{ incident_date }}</p>
-            <p><strong>Time of Incident:</strong> {{ incident_time }}</p>
-            <p><strong>Place of Incident:</strong> {{ incident_place }}</p>
+        <div class="section">
+            <div class="section-title">POLICE STATION DETAILS:</div>
+            <div class="form-field">
+                <div class="field-label">Police Station:</div>
+                <div class="field-value">{{ police_station | default('[Police Station Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">District:</div>
+                <div class="field-value">{{ district | default('[District Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Date:</div>
+                <div class="field-value">{{ current_date }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Time:</div>
+                <div class="field-value">{{ time | default('[Time of Filing]') }}</div>
+            </div>
         </div>
-        
-        <div class="content">
-            <p><strong>Details of Accused:</strong></p>
-            <p><strong>Name:</strong> {{ accused_name }}</p>
-            <p><strong>Address:</strong> {{ accused_address }}</p>
+
+        <div class="section">
+            <div class="section-title">COMPLAINANT DETAILS:</div>
+            <div class="form-field">
+                <div class="field-label">Name:</div>
+                <div class="field-value">{{ complainant_name | default('[Your Full Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Father's Name:</div>
+                <div class="field-value">{{ father_name | default('[Father\'s Name]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Age:</div>
+                <div class="field-value">{{ age | default('[Your Age]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Occupation:</div>
+                <div class="field-value">{{ occupation | default('[Your Occupation]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Address:</div>
+                <div class="field-value">{{ complainant_address | default('[Your Complete Address]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Phone Number:</div>
+                <div class="field-value">{{ phone_number | default('[Your Phone Number]') }}</div>
+            </div>
         </div>
-        
-        <div class="content">
-            <p><strong>Description of Incident:</strong></p>
-            <p>{{ incident_description }}</p>
+
+        <div class="section">
+            <div class="section-title">INCIDENT DETAILS:</div>
+            <div class="form-field">
+                <div class="field-label">Date of Incident:</div>
+                <div class="field-value">{{ incident_date | default('[Date of Incident]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Time of Incident:</div>
+                <div class="field-value">{{ incident_time | default('[Time of Incident]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Place of Incident:</div>
+                <div class="field-value">{{ incident_place | default('[Place where incident occurred]') }}</div>
+            </div>
         </div>
-        
-        <div class="content">
-            <p><strong>Witnesses:</strong></p>
-            <p>{{ witnesses }}</p>
+
+        <div class="section">
+            <div class="section-title">ACCUSED DETAILS:</div>
+            <div class="form-field">
+                <div class="field-label">Name:</div>
+                <div class="field-value">{{ accused_name | default('[Name of Accused if known]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Address:</div>
+                <div class="field-value">{{ accused_address | default('[Address of Accused if known]') }}</div>
+            </div>
+            <div class="form-field">
+                <div class="field-label">Description:</div>
+                <div class="field-value">{{ accused_description | default('[Physical description if name unknown]') }}</div>
+            </div>
         </div>
-        
-        <p>I request you to kindly register an FIR in this matter and take necessary legal action against the accused person(s). I am ready to cooperate in the investigation.</p>
-        
-        <p>I hereby declare that the above information is true to the best of my knowledge and belief.</p>
-    </div>
-    
-    <div class="date-place">
-        <p>Date: {{ date }}<br>
-        Place: {{ place }}</p>
-    </div>
-    
-    <div class="signature">
-        <p>Yours faithfully,<br><br>
-        {{ complainant_name }}<br>
-        Address: {{ complainant_address }}<br>
-        Phone: {{ complainant_phone }}</p>
+
+        <div class="section">
+            <div class="section-title">DETAILS OF INCIDENT:</div>
+            <p>{{ incident_description | default('I hereby lodge this complaint regarding the following incident: [Provide detailed description of the incident, including what happened, when it happened, who was involved, and any other relevant details. Be specific about the criminal acts committed and mention any witnesses if available.]') }}</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">SECTIONS UNDER WHICH CASE SHOULD BE REGISTERED:</div>
+            <p>{{ applicable_sections | default('The incident constitutes offenses under the following sections of the Indian Penal Code: [Mention relevant IPC sections like 420 for cheating, 406 for criminal breach of trust, 506 for criminal intimidation, etc.]') }}</p>
+        </div>
+
+        <div class="section">
+            <div class="section-title">PRAYER:</div>
+            <p>I request you to kindly register an FIR against the accused and take necessary legal action as per law. I am ready to cooperate in the investigation and provide any additional information required.</p>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line">
+                    <div>{{ complainant_name | default('[Your Name]') }}</div>
+                    <div>(Complainant)</div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
