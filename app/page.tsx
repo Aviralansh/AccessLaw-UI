@@ -10,6 +10,16 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Send, Settings, Moon, Sun, Clock, Database, X, FileText } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { ChevronDown, ChevronUp } from "lucide-react"
@@ -53,6 +63,10 @@ interface QueryParams {
   filters: Record<string, any>
 }
 
+interface DocumentFields {
+  [key: string]: string
+}
+
 export default function LegalRAGChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
@@ -69,8 +83,12 @@ export default function LegalRAGChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({})
-  const [showDocGeneration, setShowDocGeneration] = useState<Record<string, boolean>>({})
-  const [generatingDoc, setGeneratingDoc] = useState<Record<string, boolean>>({})
+  const [generatingDoc, setGeneratingDoc] = useState(false)
+  const [showDocDialog, setShowDocDialog] = useState(false)
+  const [documentFields, setDocumentFields] = useState<DocumentFields>({})
+  const [detectedDocType, setDetectedDocType] = useState<string>("")
+  const [currentQuery, setCurrentQuery] = useState("")
+  const [currentResponse, setCurrentResponse] = useState("")
 
   const scrollToBottom = () => {
     // Only auto-scroll if user is already at the bottom or it's a new message
@@ -120,8 +138,80 @@ export default function LegalRAGChat() {
     }
   }
 
-  const generateDocument = async (messageId: string, query: string, response: string) => {
-    setGeneratingDoc((prev) => ({ ...prev, [messageId]: true }))
+  const detectDocumentType = async (query: string, response: string) => {
+    try {
+      const detectionResponse = await fetch("https://aviralansh-accesslaw-doc.hf.space/detect-document-type", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          response,
+        }),
+      })
+
+      if (detectionResponse.ok) {
+        const result = await detectionResponse.json()
+        return result.detected_type
+      }
+    } catch (error) {
+      console.error("Document type detection error:", error)
+    }
+    return "legal_notice" // fallback
+  }
+
+  const getTemplateFields = async (query: string, response: string, docType: string) => {
+    try {
+      const fieldsResponse = await fetch("https://aviralansh-accesslaw-doc.hf.space/gen-doc", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          response,
+          document_type: docType,
+          dry_run: true, // Just get the fields, don't generate PDF
+        }),
+      })
+
+      if (fieldsResponse.ok) {
+        const result = await fieldsResponse.json()
+        return result.template_fields || {}
+      }
+    } catch (error) {
+      console.error("Template fields error:", error)
+    }
+    return {}
+  }
+
+  const openDocumentDialog = async () => {
+    // Get the last user message and assistant response
+    const lastAssistantMessage = messages.filter((m) => m.type === "assistant" && !m.isStreaming).pop()
+    const lastUserMessage = messages.filter((m) => m.type === "user").pop()
+
+    if (!lastAssistantMessage || !lastUserMessage) {
+      return
+    }
+
+    const query = lastUserMessage.content
+    const response = lastAssistantMessage.content
+
+    setCurrentQuery(query)
+    setCurrentResponse(response)
+
+    // Detect document type and get template fields
+    const docType = await detectDocumentType(query, response)
+    const fields = await getTemplateFields(query, response, docType)
+
+    setDetectedDocType(docType)
+    setDocumentFields(fields)
+    setShowDocDialog(true)
+  }
+
+  const generateDocument = async () => {
+    setGeneratingDoc(true)
 
     try {
       const docResponse = await fetch("/api/generate-document", {
@@ -130,8 +220,10 @@ export default function LegalRAGChat() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query,
-          response,
+          query: currentQuery,
+          response: currentResponse,
+          document_type: detectedDocType,
+          user_details: documentFields,
         }),
       })
 
@@ -153,11 +245,20 @@ export default function LegalRAGChat() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+
+      setShowDocDialog(false)
     } catch (error) {
       console.error("Document generation error:", error)
     } finally {
-      setGeneratingDoc((prev) => ({ ...prev, [messageId]: false }))
+      setGeneratingDoc(false)
     }
+  }
+
+  const handleFieldChange = (fieldName: string, value: string) => {
+    setDocumentFields((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }))
   }
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -191,8 +292,8 @@ export default function LegalRAGChat() {
     setMessages((prev) => [...prev, assistantMessage])
 
     try {
-      // Step 1: Query RAG API
-      const ragResponse = await fetch("https://aviralansh-accesslaw.hf.space/search", {
+      // Step 1: Query RAG API - Updated endpoint
+      const ragResponse = await fetch("https://aviralansh-accesslaw-doc.hf.space/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -338,6 +439,10 @@ Please provide a detailed, accurate response based on the legal sources provided
       </span>
     )
   }
+
+  // Get the last assistant message that's not streaming
+  const lastAssistantMessage = messages.filter((m) => m.type === "assistant" && !m.isStreaming).pop()
+  const hasCompletedResponse = lastAssistantMessage && !lastAssistantMessage.isStreaming
 
   return (
     <TooltipProvider>
@@ -694,6 +799,102 @@ Please provide a detailed, accurate response based on the legal sources provided
                                   </div>
                                 </div>
                               )}
+
+                              {/* Generate Document Button - Only show for the last completed assistant message */}
+                              {message === lastAssistantMessage && !message.isStreaming && (
+                                <div className="mt-4 pt-3 border-t border-current/20">
+                                  <Dialog open={showDocDialog} onOpenChange={setShowDocDialog}>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={openDocumentDialog}
+                                        className="font-mono text-xs transition-all duration-200 hover:scale-105 bg-transparent"
+                                      >
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        Generate Legal Document
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                                      <DialogHeader>
+                                        <DialogTitle className="font-mono">Generate Legal Document</DialogTitle>
+                                        <DialogDescription className="font-mono text-sm">
+                                          Review and edit the document details before generating the PDF. Fields marked
+                                          with placeholders (e.g., [Your Name]) need to be filled in.
+                                        </DialogDescription>
+                                      </DialogHeader>
+
+                                      <div className="space-y-4">
+                                        <div>
+                                          <Label className="font-mono text-sm font-bold">Document Type</Label>
+                                          <p className="font-mono text-sm text-muted-foreground capitalize">
+                                            {detectedDocType.replace("_", " ")}
+                                          </p>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                          <Label className="font-mono text-sm font-bold">Document Fields</Label>
+                                          <div className="grid gap-3">
+                                            {Object.entries(documentFields).map(([fieldName, fieldValue]) => (
+                                              <div key={fieldName} className="space-y-1">
+                                                <Label className="font-mono text-xs capitalize">
+                                                  {fieldName.replace(/_/g, " ")}
+                                                </Label>
+                                                {fieldName.includes("description") ||
+                                                fieldName.includes("content") ||
+                                                fieldName.includes("statement") ||
+                                                fieldName.includes("terms") ||
+                                                fieldName.includes("requested") ? (
+                                                  <Textarea
+                                                    value={fieldValue}
+                                                    onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                                                    className="font-mono text-xs min-h-[80px]"
+                                                    placeholder={`Enter ${fieldName.replace(/_/g, " ")}`}
+                                                  />
+                                                ) : (
+                                                  <Input
+                                                    value={fieldValue}
+                                                    onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+                                                    className="font-mono text-xs"
+                                                    placeholder={`Enter ${fieldName.replace(/_/g, " ")}`}
+                                                  />
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <DialogFooter>
+                                        <Button
+                                          variant="outline"
+                                          onClick={() => setShowDocDialog(false)}
+                                          className="font-mono"
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          onClick={generateDocument}
+                                          disabled={generatingDoc}
+                                          className="font-mono"
+                                        >
+                                          {generatingDoc ? (
+                                            <>
+                                              <LoadingAnimation />
+                                              <span className="ml-2">Generating...</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <FileText className="w-4 h-4 mr-2" />
+                                              Generate PDF
+                                            </>
+                                          )}
+                                        </Button>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                              )}
                             </>
                           )}
                         </div>
@@ -731,40 +932,6 @@ Please provide a detailed, accurate response based on the legal sources provided
                 </Button>
               </form>
             </div>
-          )}
-          {messages.map(
-            (message, index) =>
-              message.type === "assistant" &&
-              !message.isStreaming && (
-                <div className="mt-4 pt-3 border-t border-current/20">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      generateDocument(
-                        message.id,
-                        messages.find((m) => m.type === "user" && messages.indexOf(m) < messages.indexOf(message))
-                          ?.content || "",
-                        message.content,
-                      )
-                    }
-                    disabled={generatingDoc[message.id]}
-                    className="font-mono text-xs transition-all duration-200 hover:scale-105"
-                  >
-                    {generatingDoc[message.id] ? (
-                      <>
-                        <LoadingAnimation />
-                        <span className="ml-2">Generating Document...</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="w-3 h-3 mr-1" />
-                        Generate Legal Document
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ),
           )}
         </div>
       </div>

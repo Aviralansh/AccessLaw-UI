@@ -4,8 +4,8 @@ export async function POST(req: NextRequest) {
   try {
     const { query, response, document_type, user_details } = await req.json()
 
-    // Call the FastAPI backend for document generation
-    const backendResponse = await fetch("https://aviralansh-accesslaw.hf.space/gen-doc", {
+    // Call the FastAPI backend for document generation - Updated endpoint
+    const backendResponse = await fetch("https://aviralansh-accesslaw-doc.hf.space/gen-doc", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
     })
 
     if (!backendResponse.ok) {
+      const errorText = await backendResponse.text()
+      console.error("Backend API error:", errorText)
       throw new Error(`Backend API error: ${backendResponse.status}`)
     }
 

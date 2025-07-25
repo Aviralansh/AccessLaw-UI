@@ -81,6 +81,15 @@ class DocumentTypesResponse(BaseModel):
     document_types: Dict[str, Dict[str, Any]]
     total_types: int
 
+class DetectDocumentTypeRequest(BaseModel):
+    query: str = Field(..., description="User query")
+    response: str = Field(..., description="AI response")
+
+class DetectDocumentTypeResponse(BaseModel):
+    detected_type: str
+    document_name: str
+    confidence: str
+
 # Global instances
 embedder = None
 doc_generator = None
@@ -331,8 +340,8 @@ async def download_generated_document(request: DocumentGenerationRequest):
         logger.error(f"Document download error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Document download failed: {str(e)}")
 
-@app.post("/detect-document-type")
-async def detect_document_type(query: str, response: str):
+@app.post("/detect-document-type", response_model=DetectDocumentTypeResponse)
+async def detect_document_type(request: DetectDocumentTypeRequest):
     """
     Detect the most appropriate document type for given query and response.
     """
@@ -340,15 +349,19 @@ async def detect_document_type(query: str, response: str):
         raise HTTPException(status_code=503, detail="Document generation service not initialized")
     
     try:
-        detected_type = doc_generator.detect_document_type(query, response)
+        detected_type = doc_generator.detect_document_type(request.query, request.response)
         doc_info = doc_generator.document_types[detected_type]
         
-        return {
-            "detected_type": detected_type,
-            "document_name": doc_info['name'],
-            "confidence": "high" if any(keyword in f"{query} {response}".lower() 
-                                      for keyword in doc_info['keywords']) else "medium"
-        }
+        # Calculate confidence based on keyword matches
+        combined_text = f"{request.query} {request.response}".lower()
+        keyword_matches = sum(1 for keyword in doc_info['keywords'] if keyword.lower() in combined_text)
+        confidence = "high" if keyword_matches >= 2 else "medium" if keyword_matches >= 1 else "low"
+        
+        return DetectDocumentTypeResponse(
+            detected_type=detected_type,
+            document_name=doc_info['name'],
+            confidence=confidence
+        )
         
     except Exception as e:
         logger.error(f"Document type detection error: {str(e)}")
