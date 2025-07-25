@@ -1,31 +1,43 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json()
+    const { query, response, document_type, user_details } = await req.json()
 
-    // Forward the request to the Python backend
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/doc/gen-doc`, {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+    const hfToken = process.env.NEXT_PUBLIC_HF_TOKEN
+
+    if (!backendUrl || !hfToken) {
+      return NextResponse.json({ error: "Backend URL or HuggingFace Token not configured" }, { status: 500 })
+    }
+
+    const docResponse = await fetch(`${backendUrl}/doc/gen-doc`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
+        Authorization: `Bearer ${hfToken}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        query,
+        response,
+        document_type,
+        user_details,
+      }),
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Backend request failed: ${response.status} - ${errorText}`)
+    if (!docResponse.ok) {
+      const errorData = await docResponse.json()
+      console.error("Backend document generation error:", errorData)
+      return NextResponse.json(
+        { error: errorData.detail || "Backend document generation failed" },
+        { status: docResponse.status },
+      )
     }
 
-    const data = await response.json()
-    return NextResponse.json(data)
+    const result = await docResponse.json()
+    return NextResponse.json(result)
   } catch (error) {
-    console.error("Document generation error:", error)
-    return NextResponse.json(
-      { error: `Document generation failed: ${error instanceof Error ? error.message : "Unknown error"}` },
-      { status: 500 },
-    )
+    console.error("Error in generate-document API route:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -5,7 +5,7 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "AccessLaw RAG Chat",
   description: "Legal Document Search & Analysis with RAG",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({

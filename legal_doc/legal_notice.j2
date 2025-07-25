@@ -5,120 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Notice</title>
     <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #000;
-            background: #fff;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
-        }
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 10px;
-        }
-        .content {
-            margin: 20px 0;
-            text-align: justify;
-        }
-        .section {
-            margin: 15px 0;
-        }
-        .section-title {
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 10px;
-        }
-        .signature-section {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .signature-box {
-            width: 200px;
-            text-align: center;
-        }
-        .signature-line {
-            border-top: 1px solid #000;
-            margin-top: 50px;
-            padding-top: 5px;
-        }
-        .date-place {
-            margin: 20px 0;
-        }
-        .bold {
-            font-weight: bold;
-        }
-        .underline {
-            text-decoration: underline;
-        }
+        body { font-family: 'Times New Roman', serif; line-height: 1.6; margin: 40px; color: #333; }
+        .container { width: 80%; margin: auto; border: 1px solid #ccc; padding: 30px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #0056b3; margin-bottom: 30px; font-size: 24px; }
+        .address-block { margin-bottom: 20px; }
+        .address-block p { margin: 0; }
+        .section { margin-bottom: 20px; }
+        .section-title { font-weight: bold; margin-bottom: 10px; text-decoration: underline; }
+        .content { margin-left: 20px; }
+        .signature-block { margin-top: 50px; text-align: right; }
+        .signature-line { border-top: 1px solid #000; width: 200px; margin-left: auto; margin-top: 5px; padding-top: 5px; }
+        .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #666; }
+        .bold { font-weight: bold; }
+        .italic { font-style: italic; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="title">LEGAL NOTICE</div>
-        <div>Under Section 138 of the Negotiable Instruments Act, 1881</div>
-    </div>
+    <div class="container">
+        <h1>LEGAL NOTICE</h1>
 
-    <div class="content">
-        <div class="section">
-            <div class="section-title">TO:</div>
-            <p><strong>{{ recipient_name | default('[Recipient Name]') }}</strong><br>
-            {{ recipient_address | default('[Recipient Address]') }}</p>
+        <div class="address-block">
+            <p>From:</p>
+            <p><span class="bold">{{ sender_name | default('[Sender Name]') }}</span></p>
+            <p>{{ sender_address | default('[Sender Address]') }}</p>
+            <p>Date: <span class="bold">{{ date_of_notice | default('[Date of Notice]') }}</span></p>
+        </div>
+
+        <div class="address-block">
+            <p>To:</p>
+            <p><span class="bold">{{ recipient_name | default('[Recipient Name]') }}</span></p>
+            <p>{{ recipient_address | default('[Recipient Address]') }}</p>
         </div>
 
         <div class="section">
-            <div class="section-title">FROM:</div>
-            <p><strong>{{ sender_name | default('[Your Name]') }}</strong><br>
-            {{ sender_address | default('[Your Address]') }}<br>
-            Phone: {{ sender_phone | default('[Your Phone Number]') }}<br>
-            Email: {{ sender_email | default('[Your Email]') }}</p>
+            <p><span class="bold">Subject:</span> {{ subject | default('[Subject of Notice]') }}</p>
         </div>
 
         <div class="section">
-            <div class="section-title">SUBJECT: {{ subject | default('Legal Notice for Recovery of Amount') }}</div>
+            <p>Dear Sir/Madam,</p>
+            <p>Under instructions from and on behalf of our client, <span class="bold">{{ sender_name | default('[Sender Name]') }}</span>, residing at the above-mentioned address, I hereby serve upon you this legal notice:</p>
         </div>
 
         <div class="section">
-            <p><strong>Sir/Madam,</strong></p>
-            
-            <p>I, {{ sender_name | default('[Your Name]') }}, through this legal notice, hereby call upon you to pay the amount of <strong>Rs. {{ amount | default('[Amount]') }}</strong> within 15 days from the receipt of this notice.</p>
-            
-            <p><strong>FACTS OF THE CASE:</strong></p>
-            <p>{{ case_facts | default('The facts of the case are as follows: [Describe the circumstances that led to this legal notice, including dates, agreements, transactions, or incidents that form the basis of your claim.]') }}</p>
-            
-            <p><strong>LEGAL GROUNDS:</strong></p>
-            <p>{{ legal_grounds | default('Your actions constitute a breach of contract/agreement and you are legally liable to pay the aforementioned amount. The legal provisions applicable to this case include relevant sections of the Indian Contract Act, 1872, and other applicable laws.') }}</p>
-            
-            <p><strong>DEMAND:</strong></p>
-            <p>You are hereby called upon to pay the amount of Rs. {{ amount | default('[Amount]') }} within 15 days from the receipt of this notice, failing which legal proceedings shall be initiated against you for recovery of the said amount along with interest and costs.</p>
-            
-            <p><strong>CONSEQUENCES OF NON-COMPLIANCE:</strong></p>
-            <p>Please take note that if you fail to comply with this notice within the stipulated time, I shall be constrained to initiate appropriate legal proceedings against you for recovery of the amount, damages, interest, and costs, without any further notice to you.</p>
-            
-            <p>This notice is issued without prejudice to any other rights and remedies available to me in law.</p>
-        </div>
-
-        <div class="date-place">
-            <p><strong>Date:</strong> {{ current_date }}</p>
-            <p><strong>Place:</strong> {{ place | default('[Your City]') }}</p>
-        </div>
-
-        <div class="signature-section">
-            <div class="signature-box">
-                <div class="signature-line">
-                    <div>{{ sender_name | default('[Your Name]') }}</div>
-                    <div>(Sender)</div>
-                </div>
+            <div class="section-title">Details of Claim:</div>
+            <div class="content">
+                <p>{{ details_of_claim | default('[Details of Claim]') | replace('\n', '<br>') | safe }}</p>
             </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Action Demanded:</div>
+            <div class="content">
+                <p>{{ action_demanded | default('[Action Demanded]') | replace('\n', '<br>') | safe }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Consequences of Non-Compliance:</div>
+            <div class="content">
+                <p>{{ consequences | default('[Consequences of Non-Compliance]') | replace('\n', '<br>') | safe }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <p>A copy of this notice is retained in my office for further necessary action.</p>
+        </div>
+
+        <div class="signature-block">
+            <p>Yours faithfully,</p>
+            <p>{{ signature | default('[Advocate/Sender Signature]') }}</p>
+            <div class="signature-line"></div>
+        </div>
+
+        <div class="footer">
+            <p>Note: This is a draft legal notice. It is advisable to consult with a legal professional before sending any formal legal communication.</p>
         </div>
     </div>
 </body>
