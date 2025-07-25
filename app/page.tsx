@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Send, Settings, Moon, Sun, Clock, Database, X } from "lucide-react"
+import { Send, Settings, Moon, Sun, Clock, Database, X, FileText } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -69,6 +69,8 @@ export default function LegalRAGChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({})
+  const [showDocGeneration, setShowDocGeneration] = useState<Record<string, boolean>>({})
+  const [generatingDoc, setGeneratingDoc] = useState<Record<string, boolean>>({})
 
   const scrollToBottom = () => {
     // Only auto-scroll if user is already at the bottom or it's a new message
@@ -115,6 +117,46 @@ export default function LegalRAGChat() {
       })
 
       setIsLoading(false)
+    }
+  }
+
+  const generateDocument = async (messageId: string, query: string, response: string) => {
+    setGeneratingDoc((prev) => ({ ...prev, [messageId]: true }))
+
+    try {
+      const docResponse = await fetch("/api/generate-document", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          response,
+        }),
+      })
+
+      if (!docResponse.ok) {
+        throw new Error("Document generation failed")
+      }
+
+      const result = await docResponse.json()
+
+      // Create download link
+      const blob = new Blob([Uint8Array.from(atob(result.pdf_content), (c) => c.charCodeAt(0))], {
+        type: "application/pdf",
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = result.filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Document generation error:", error)
+    } finally {
+      setGeneratingDoc((prev) => ({ ...prev, [messageId]: false }))
     }
   }
 
@@ -689,6 +731,40 @@ Please provide a detailed, accurate response based on the legal sources provided
                 </Button>
               </form>
             </div>
+          )}
+          {messages.map(
+            (message, index) =>
+              message.type === "assistant" &&
+              !message.isStreaming && (
+                <div className="mt-4 pt-3 border-t border-current/20">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      generateDocument(
+                        message.id,
+                        messages.find((m) => m.type === "user" && messages.indexOf(m) < messages.indexOf(message))
+                          ?.content || "",
+                        message.content,
+                      )
+                    }
+                    disabled={generatingDoc[message.id]}
+                    className="font-mono text-xs transition-all duration-200 hover:scale-105"
+                  >
+                    {generatingDoc[message.id] ? (
+                      <>
+                        <LoadingAnimation />
+                        <span className="ml-2">Generating Document...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-3 h-3 mr-1" />
+                        Generate Legal Document
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ),
           )}
         </div>
       </div>
