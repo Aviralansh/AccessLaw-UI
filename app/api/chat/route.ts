@@ -1,5 +1,6 @@
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
+import { type NextRequest, NextResponse } from "next/server"
 
 // Create an OpenAI API client (that's compatible with OpenRouter)
 const openai = createOpenAI({
@@ -11,15 +12,20 @@ const openai = createOpenAI({
   },
 })
 
-export async function POST(req: Request) {
-  const { messages } = await req.json()
+export async function POST(req: NextRequest) {
+  try {
+    const { messages } = await req.json()
 
-  const response = await openai.chat.completions.create({
-    model: "mistralai/mistral-7b-instruct", // You can change this to 'mistralai/mixtral-8x7b-instruct' or 'google/gemini-pro' or 'deepseek-ai/deepseek-coder'
-    stream: true,
-    messages,
-  })
+    const response = await openai.chat.completions.create({
+      model: "mistralai/mistral-7b-instruct", // You can change this to 'mistralai/mixtral-8x7b-instruct' or 'google/gemini-pro' or 'deepseek-ai/deepseek-coder'
+      stream: true,
+      messages,
+    })
 
-  const stream = OpenAIStream(response)
-  return new StreamingTextResponse(stream)
+    const stream = OpenAIStream(response)
+    return new StreamingTextResponse(stream)
+  } catch (error) {
+    console.error("Chat API error:", error)
+    return NextResponse.json({ error: "Failed to process request" }, { status: 500 })
+  }
 }

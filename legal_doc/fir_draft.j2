@@ -5,65 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIR Draft</title>
     <style>
-        body { font-family: 'Times New Roman', serif; line-height: 1.6; margin: 40px; color: #333; background: #fff; }
-        .container { width: 80%; margin: auto; border: 1px solid #ccc; padding: 30px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #cc0000; margin-bottom: 30px; font-size: 24px; }
-        .section { margin-bottom: 20px; }
-        .section-title { font-weight: bold; margin-bottom: 10px; text-decoration: underline; }
-        .content { margin-left: 20px; }
-        .signature-block { margin-top: 50px; text-align: right; }
-        .signature-line { border-top: 1px solid #000; width: 200px; margin-left: auto; margin-top: 5px; padding-top: 5px; }
-        .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #666; }
-        .bold { font-weight: bold; }
-        .italic { font-style: italic; }
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 1in;
+            color: #333;
+        }
+        .container {
+            max-width: 6.5in;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24pt;
+            margin-bottom: 0.5in;
+            text-transform: uppercase;
+        }
+        .section {
+            margin-bottom: 0.2in;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .signature-block {
+            margin-top: 0.75in;
+            text-align: left;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 3in;
+            margin-top: 0.2in;
+            padding-top: 0.05in;
+        }
+        .date-place {
+            margin-top: 0.5in;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 1in;
+            text-align: center;
+            font-size: 10pt;
+            color: #777;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>DRAFT FIRST INFORMATION REPORT (FIR)</h1>
+        <h1>First Information Report (FIR) Draft</h1>
 
         <div class="section">
             <p>To,</p>
             <p>The Station House Officer,</p>
-            <p>Police Station {{ police_station | default('[Police Station Name]') }}</p>
-            <p>Subject: Complaint regarding <span class="bold">{{ requested_action | default('[Nature of Complaint]') }}</span></p>
+            <p><span class="bold underline">{{ police_station | default("[Name of Police Station]") }}</span>,</p>
+            <p><span class="bold underline">{{ police_station_address | default("[Address of Police Station]") }}</span>.</p>
+        </div>
+
+        <div class="section">
+            <p><span class="bold">Subject:</span> Regarding <span class="bold underline">{{ subject | default("[Nature of Complaint, e.g., Theft, Assault, Cheating]") }}</span></p>
         </div>
 
         <div class="section">
             <p>Respected Sir/Madam,</p>
-            <p>I, <span class="bold">{{ complainant_name | default('[Complainant Name]') }}</span>, son/daughter of {{ father_name | default('[Father\'s Name]') }}, aged {{ age | default('[Age]') }} years, residing at <span class="bold">{{ complainant_address | default('[Complainant Address]') }}</span>, bearing contact number <span class="bold">{{ phone_number | default('[Your Phone Number]') }}</span>, wish to lodge a complaint regarding the following incident:</p>
+            <p>I, <span class="bold underline">{{ complainant_name | default("[Complainant's Full Name]") }}</span>, son/daughter/wife of <span class="bold underline">{{ complainant_father_name | default("[Complainant's Father/Husband's Name]") }}</span>, residing at <span class="bold underline">{{ complainant_address | default("[Complainant's Full Address]") }}</span>, Mobile No. <span class="bold underline">{{ complainant_contact | default("[Complainant's Mobile Number]") }}</span>, wish to lodge a complaint regarding the following incident:</p>
         </div>
 
         <div class="section">
-            <div class="section-title">Details of Incident:</div>
-            <div class="content">
-                <p><span class="bold">Date of Incident:</span> {{ incident_date | default('[Incident Date]') }}</p>
-                <p><span class="bold">Time of Incident:</span> {{ incident_time | default('[Incident Time]') }}</p>
-                <p><span class="bold">Location of Incident:</span> {{ incident_place | default('[Place where incident occurred]') }}</p>
-                <p><span class="bold">Facts of the Incident:</span></p>
-                <p>{{ incident_description | default('I hereby lodge this complaint regarding the following incident: [Provide detailed description of the incident, including what happened, when it happened, who was involved, and any other relevant details. Be specific about the criminal acts committed and mention any witnesses if available.]') | replace('\n', '<br>') | safe }}</p>
-                <p><span class="bold">Stolen/Damaged Items (if any):</span> {{ stolen_items | default('[Stolen Items]') }}</p>
-                <p><span class="bold">Witness Details (if any):</span> {{ witness_details | default('[Witness Details]') }}</p>
-            </div>
+            <p><span class="bold">Date of Incident:</span> <span class="underline">{{ incident_date | default("[Date of Incident]") }}</span></p>
+            <p><span class="bold">Time of Incident:</span> <span class="underline">{{ incident_time | default("[Time of Incident]") }}</span></p>
+            <p><span class="bold">Place of Incident:</span> <span class="underline">{{ incident_location | default("[Location of Incident]") }}</span></p>
         </div>
 
         <div class="section">
-            <p>I request you to kindly take necessary action and register an FIR in this regard.</p>
+            <p><span class="bold">Facts of the Incident:</span></p>
+            <p>{{ facts_of_incident | default("[Detailed description of the incident, including what happened, how it happened, and who was involved (if known).]") }}</p>
         </div>
 
         <div class="section">
-            <p>Thanking you,</p>
-            <p>Yours faithfully,</p>
+            <p><span class="bold">Accused (if known):</span> <span class="underline">{{ accused_name | default("[Name of Accused, if known]") }}</span>, son/daughter of <span class="underline">{{ accused_father_name | default("[Accused's Father/Husband's Name, if known]") }}</span>, residing at <span class="underline">{{ accused_address | default("[Accused's Address, if known]") }}</span>.</p>
+        </div>
+
+        <div class="section">
+            <p><span class="bold">Stolen/Lost Items (if any):</span> {{ stolen_items | default("[List of stolen/lost items with descriptions, e.g., 'One Samsung Galaxy S23, Black, IMEI: XXXXXXXXXX']") }}</p>
+        </div>
+
+        <div class="section">
+            <p><span class="bold">Witness Details (if any):</span> {{ witness_details | default("[Names and contact details of any witnesses]") }}</p>
+        </div>
+
+        <div class="section">
+            <p>I request you to kindly register my complaint as an FIR and take necessary legal action against the culprits. I am ready to provide any further information or assistance required for the investigation.</p>
         </div>
 
         <div class="signature-block">
-            <p>(<span class="bold">{{ complainant_name | default('[Complainant Name]') }}</span>)</p>
+            <p>Yours faithfully,</p>
             <div class="signature-line"></div>
-            <p>Date: {{ current_date }}</p>
+            <p class="bold">{{ complainant_name | default("[Complainant's Full Name]") }}</p>
         </div>
 
-        <div class="footer">
-            <p>Note: This is a draft FIR. It should be submitted to the nearest police station for official registration.</p>
+        <div class="date-place">
+            <p>Date: {{ current_date }}</p>
+            <p>Place: {{ place | default("[Place]") }}</p>
         </div>
     </div>
 </body>

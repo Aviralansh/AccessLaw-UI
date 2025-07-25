@@ -5,49 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rental Agreement</title>
     <style>
-        body { font-family: 'Times New Roman', serif; line-height: 1.6; margin: 40px; color: #333; }
-        .container { width: 80%; margin: auto; border: 1px solid #ccc; padding: 30px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #007bff; margin-bottom: 30px; font-size: 24px; }
-        .section { margin-bottom: 20px; }
-        .section-title { font-weight: bold; margin-bottom: 10px; text-decoration: underline; }
-        .content { margin-left: 20px; }
-        .signature-block { margin-top: 50px; display: flex; justify-content: space-around; }
-        .signature-item { text-align: center; width: 45%; }
-        .signature-line { border-top: 1px solid #000; width: 200px; margin: 5px auto; padding-top: 5px; }
-        .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #666; }
-        .bold { font-weight: bold; }
-        .italic { font-style: italic; }
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 1in;
+            color: #333;
+        }
+        .container {
+            max-width: 6.5in;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24pt;
+            margin-bottom: 0.5in;
+            text-transform: uppercase;
+        }
+        .section {
+            margin-bottom: 0.2in;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .signature-block {
+            margin-top: 0.75in;
+            text-align: left;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+        }
+        .signature-party {
+            flex: 1;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 2.5in;
+            margin: 0.2in auto 0.05in auto;
+        }
+        .date-place {
+            margin-top: 0.5in;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 1in;
+            text-align: center;
+            font-size: 10pt;
+            color: #777;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RENTAL AGREEMENT</h1>
+        <h1>Rental Agreement</h1>
 
         <div class="section">
-            <p>This Rental Agreement is made and entered into on this <span class="bold">{{ agreement_start_date | default('[Agreement Start Date]') }}</span></p>
-            <p>BETWEEN:</p>
-            <p><span class="bold">{{ landlord_name | default('[Landlord Name]') }}</span>, son/daughter of [Father's Name], residing at <span class="bold">{{ landlord_address | default('[Landlord Address]') }}</span> (hereinafter referred to as "the Landlord").</p>
-            <p>AND</p>
-            <p><span class="bold">{{ tenant_name | default('[Tenant Name]') }}</span>, son/daughter of [Father's Name], residing at <span class="bold">{{ tenant_address | default('[Tenant Address]') }}</span> (hereinafter referred to as "the Tenant").</p>
+            This Rental Agreement is made and entered into on this <span class="bold underline">{{ agreement_start_date | default(current_date) }}</span>,
+            between:
         </div>
 
         <div class="section">
-            <div class="section-title">Property Details:</div>
-            <div class="content">
-                <p>The Landlord hereby agrees to let out and the Tenant hereby agrees to take on rent the property located at:</p>
-                <p><span class="bold">{{ property_address | default('[Property Address]') | replace('\n', '<br>') | safe }}</span></p>
-            </div>
+            <p><span class="bold">LANDLORD:</span></p>
+            <p><span class="bold underline">{{ landlord_name | default("[Landlord's Full Name]") }}</span>, son/daughter/wife of <span class="bold underline">{{ landlord_father_name | default("[Landlord's Father/Husband's Name]") }}</span>,
+            residing at <span class="bold underline">{{ landlord_address | default("[Landlord's Full Address]") }}</span>.</p>
+            <p>(hereinafter referred to as the "Landlord", which expression shall unless repugnant to the context or meaning thereof, include his/her heirs, executors, administrators and assigns)</p>
         </div>
 
         <div class="section">
-            <div class="section-title">Terms of Agreement:</div>
-            <div class="content">
-                <p><span class="bold">1. Rent:</span> The monthly rent for the said property shall be INR <span class="bold">{{ rent_amount | default('[Rent Amount]') }}</span>, payable on or before the 5th day of each calendar month.</p>
-                <p><span class="bold">2. Security Deposit:</span> The Tenant shall pay a security deposit of INR <span class="bold">{{ security_deposit | default('[Security Deposit]') }}</span>, which shall be refundable at the time of vacating the premises, subject to deductions for damages or unpaid dues.</p>
-                <p><span class="bold">3. Lease Period:</span> This agreement shall be for a period of [Duration, e.g., 11 months] commencing from <span class="bold">{{ agreement_start_date | default('[Agreement Start Date]') }}</span> and ending on <span class="bold">{{ agreement_end_date | default('[Agreement End Date]') }}</span>.</p>
-                <p><span class="bold">4. Other Terms and Conditions:</span></p>
-                <p>{{ terms_and_conditions | default('[Terms and Conditions]') | replace('\n', '<br>') | safe }}</p>
-            </div>
+            <p><span class="bold">AND</span></p>
+        </div>
+
+        <div class="section">
+            <p><span class="bold">TENANT:</span></p>
+            <p><span class="bold underline">{{ tenant_name | default("[Tenant's Full Name]") }}</span>, son/daughter/wife of <span class="bold underline">{{ tenant_father_name | default("[Tenant's Father/Husband's Name]") }}</span>,
+            residing at <span class="bold underline">{{ tenant_address | default("[Tenant's Full Address]") }}</span>.</p>
+            <p>(hereinafter referred to as the "Tenant", which expression shall unless repugnant to the context or meaning thereof, include his/her heirs, executors, administrators and assigns)</p>
+        </div>
+
+        <div class="section">
+            <p><span class="bold">WHEREAS</span> the Landlord is the absolute owner of the property situated at:</p>
+            <p class="bold underline">{{ property_address | default("[Full Address of the Property being Rented]") }}</p>
+            <p>(hereinafter referred to as the "Said Property").</p>
+        </div>
+
+        <div class="section">
+            <p>AND WHEREAS the Tenant has approached the Landlord to take the Said Property on rent for residential/commercial purposes for a period of <span class="bold underline">{{ lease_duration | default("[Lease Duration, e.g., '11 months', '2 years']") }}</span>, commencing from <span class="bold underline">{{ agreement_start_date | default(current_date) }}</span> and ending on <span class="bold underline">{{ agreement_end_date | default("[Agreement End Date]") }}</span>.</p>
+        </div>
+
+        <div class="section">
+            <p><span class="bold">NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:</span></p>
+            <ol>
+                <li>That the monthly rent for the Said Property shall be <span class="bold underline">Rs. {{ rent_amount | default("[Rent Amount in Figures]") }} /- (Rupees {{ rent_amount_words | default("[Rent Amount in Words]") }} Only)</span>, payable on or before the <span class="bold underline">{{ rent_due_date | default("5th") }}</span> day of each calendar month.</li>
+                <li>That the Tenant shall pay a Security Deposit of <span class="bold underline">Rs. {{ security_deposit | default("[Security Deposit Amount in Figures]") }} /- (Rupees {{ security_deposit_words | default("[Security Deposit Amount in Words]") }} Only)</span> to the Landlord, which shall be refundable at the time of vacating the Said Property, subject to deductions for any damages or unpaid dues.</li>
+                <li>That the Tenant shall use the Said Property for <span class="bold underline">{{ property_usage | default("residential") }}</span> purposes only.</li>
+                <li>That the Tenant shall be responsible for all utility bills including electricity, water, and maintenance charges.</li>
+                <li>That the Tenant shall maintain the Said Property in good and tenantable condition.</li>
+                <li><span class="bold">Other Terms and Conditions:</span> {{ terms_and_conditions | default("[Any other specific terms and conditions agreed upon by both parties, e.g., 'No pets allowed', 'Subletting not permitted', 'Notice period for vacating the property']") }}</li>
+            </ol>
         </div>
 
         <div class="section">
@@ -55,20 +113,26 @@
         </div>
 
         <div class="signature-block">
-            <div class="signature-item">
-                <p>_________________________</p>
-                <p><span class="bold">{{ signature_landlord | default('[Landlord Signature]') }}</span></p>
-                <p>(Landlord)</p>
+            <div class="signature-party">
+                <p>WITNESSES:</p>
+                <p>1. _________________________</p>
+                <p>2. _________________________</p>
             </div>
-            <div class="signature-item">
-                <p>_________________________</p>
-                <p><span class="bold">{{ signature_tenant | default('[Tenant Signature]') }}</span></p>
-                <p>(Tenant)</p>
+            <div class="signature-party">
+                <p>LANDLORD</p>
+                <div class="signature-line"></div>
+                <p class="bold">{{ landlord_name | default("[Landlord's Full Name]") }}</p>
+            </div>
+            <div class="signature-party">
+                <p>TENANT</p>
+                <div class="signature-line"></div>
+                <p class="bold">{{ tenant_name | default("[Tenant's Full Name]") }}</p>
             </div>
         </div>
 
-        <div class="footer">
-            <p>Note: This is a draft rental agreement. It is advisable to consult with a legal professional and register the agreement as per local laws.</p>
+        <div class="date-place">
+            <p>Date: {{ current_date }}</p>
+            <p>Place: {{ place | default("[Place]") }}</p>
         </div>
     </div>
 </body>

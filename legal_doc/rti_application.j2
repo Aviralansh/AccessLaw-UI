@@ -8,152 +8,107 @@
         body {
             font-family: 'Times New Roman', serif;
             line-height: 1.6;
-            margin: 40px;
+            margin: 0;
+            padding: 1in;
             color: #333;
-            background: #fff;
         }
         .container {
-            width: 80%;
-            margin: auto;
-            border: 1px solid #ccc;
-            padding: 30px;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+            max-width: 6.5in;
+            margin: 0 auto;
         }
         h1 {
             text-align: center;
-            color: #008000;
-            margin-bottom: 30px;
-            font-size: 24px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
-        }
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 10px;
-        }
-        .content {
-            margin-left: 20px;
-            text-align: justify;
+            font-size: 24pt;
+            margin-bottom: 0.5in;
+            text-transform: uppercase;
         }
         .section {
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-decoration: underline;
-        }
-        .form-field {
-            margin: 10px 0;
-            display: flex;
-            align-items: flex-start;
-        }
-        .field-label {
-            font-weight: bold;
-            min-width: 200px;
-            margin-right: 10px;
-        }
-        .field-value {
-            flex: 1;
-            border-bottom: 1px dotted #000;
-            min-height: 20px;
-            padding: 2px 5px;
-        }
-        .signature-section {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .signature-box {
-            width: 200px;
-            text-align: center;
-        }
-        .signature-block {
-            margin-top: 50px;
-            text-align: right;
-        }
-        .signature-line {
-            border-top: 1px solid #000;
-            width: 200px;
-            margin-left: auto;
-            margin-top: 5px;
-            padding-top: 5px;
-        }
-        .footer {
-            margin-top: 50px;
-            font-size: 12px;
-            text-align: center;
-            color: #666;
+            margin-bottom: 0.2in;
         }
         .bold {
             font-weight: bold;
         }
-        .italic {
-            font-style: italic;
-        }
         .underline {
             text-decoration: underline;
+        }
+        .signature-block {
+            margin-top: 0.75in;
+            text-align: left;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 3in;
+            margin-top: 0.2in;
+            padding-top: 0.05in;
+        }
+        .date-place {
+            margin-top: 0.5in;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 1in;
+            text-align: center;
+            font-size: 10pt;
+            color: #777;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>APPLICATION UNDER THE RIGHT TO INFORMATION ACT, 2005</h1>
+        <h1>Right to Information (RTI) Application</h1>
 
         <div class="section">
             <p>To,</p>
             <p>The Public Information Officer (PIO),</p>
-            <p><span class="bold">{{ public_authority | default('[Public Authority Name]') }}</span></p>
-            <p>Department: <span class="bold">{{ department | default('[Department Name]') }}</span></p>
-            <p>Address: [Public Authority Address]</p>
+            <p><span class="bold underline">{{ public_authority | default("[Name of Public Authority/Department]") }}</span>,</p>
+            <p><span class="bold underline">{{ department_address | default("[Address of Public Authority/Department]") }}</span>.</p>
         </div>
 
         <div class="section">
-            <p>Subject: Request for Information under RTI Act, 2005</p>
+            <p><span class="bold">Subject:</span> Application for information under the Right to Information Act, 2005.</p>
         </div>
 
         <div class="section">
             <p>Respected Sir/Madam,</p>
-            <p>I, <span class="bold">{{ applicant_name | default('[Applicant Name]') }}</span>, son/daughter of [Father's Name], residing at <span class="bold">{{ applicant_address | default('[Applicant Address]') }}</span>, wish to seek the following information under the Right to Information Act, 2005:</p>
+            <p>I, <span class="bold underline">{{ applicant_name | default("[Applicant's Full Name]") }}</span>, son/daughter/wife of <span class="bold underline">{{ applicant_father_name | default("[Applicant's Father/Husband's Name]") }}</span>,
+            residing at <span class="bold underline">{{ applicant_address | default("[Applicant's Full Address]") }}</span>, Mobile No. <span class="bold underline">{{ applicant_phone | default("[Applicant's Mobile Number]") }}</span>, Email: <span class="bold underline">{{ applicant_email | default("[Applicant's Email Address]") }}</span>,
+            wish to seek the following information under the provisions of the Right to Information Act, 2005:</p>
         </div>
 
         <div class="section">
-            <div class="section-title">Information Sought:</div>
-            <div class="content">
-                <p>{{ information_sought | default('[Information Sought]') | replace('\n', '<br>') | safe }}</p>
-                <p><span class="bold">Period for which information is sought:</span> {{ period_of_information | default('[Period of Information]') }}</p>
-            </div>
+            <ol>
+                <li>{{ information_sought_1 | default("[Specific information point 1]") }}</li>
+                <li>{{ information_sought_2 | default("[Specific information point 2]") }}</li>
+                <li>{{ information_sought_3 | default("[Specific information point 3]") }}</li>
+                <!-- Add more points as needed -->
+            </ol>
         </div>
 
         <div class="section">
-            <p>I am an Indian citizen and I am seeking this information in my capacity as a citizen.</p>
-            <p>I have paid the prescribed fee of INR 10/- (Rupees Ten Only) vide <span class="bold">{{ payment_details | default('[Payment Details]') }}</span>.</p>
+            <p><span class="bold">Period for which information is sought:</span> <span class="underline">{{ period_of_information | default("[e.g., 'From January 1, 2020 to December 31, 2023', 'Last 5 years']") }}</span></p>
         </div>
 
         <div class="section">
-            <p>I assure you that I shall not misuse the information received.</p>
-            <p>Kindly provide the information at the earliest.</p>
+            <p>I am an Indian citizen and I am seeking this information in the public interest for the purpose of <span class="underline">{{ purpose | default("[Purpose of seeking information, e.g., 'understanding government policies', 'ensuring transparency']") }}</span>.</p>
         </div>
 
         <div class="section">
-            <p>Thanking you,</p>
-            <p>Yours faithfully,</p>
+            <p>I have paid the prescribed fee of Rs. <span class="bold underline">{{ payment_amount | default("[Fee Amount]") }}</span> vide <span class="bold underline">{{ payment_details | default("[Payment Method and Details, e.g., 'Indian Postal Order No. XXXXXX', 'Demand Draft No. YYYYYY']") }}</span>.</p>
+        </div>
+
+        <div class="section">
+            <p>I request you to provide the information within the stipulated time frame as per the RTI Act, 2005.</p>
         </div>
 
         <div class="signature-block">
-            <p>(<span class="bold">{{ applicant_name | default('[Applicant Name]') }}</span>)</p>
+            <p>Yours faithfully,</p>
             <div class="signature-line"></div>
-            <p>Date: <span class="bold">{{ date_of_application | default('[Date of Application]') }}</span></p>
+            <p class="bold">{{ applicant_name | default("[Applicant's Full Name]") }}</p>
         </div>
 
-        <div class="footer">
-            <p>Note: This is a draft RTI application. Ensure all details are accurate and submit to the relevant Public Information Officer.</p>
+        <div class="date-place">
+            <p>Date: {{ date_of_application | default(current_date) }}</p>
+            <p>Place: {{ place | default("[Place]") }}</p>
         </div>
     </div>
 </body>

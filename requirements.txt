@@ -1,6 +1,9 @@
 fastapi==0.104.1
 uvicorn==0.24.0.post1
-requests==2.31.0
-python-dotenv==1.0.0
+pydantic==2.5.2
 jinja2==3.1.2
-pdfkit==1.2.0
+pdfkit==1.0.0
+wkhtmltopdf==0.2.0 # This is a placeholder, you need to install wkhtmltopdf system-wide
+sentence-transformers==2.2.2
+chromadb==0.4.18
+requests==2.31.0

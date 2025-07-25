@@ -32,7 +32,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (!templateResponse.ok) {
-      throw new Error(`Failed to get template: ${templateResponse.statusText}`)
+      const errorText = await templateResponse.text() // Read as text if not OK
+      throw new Error(
+        `Failed to get template: ${templateResponse.status} - ${errorText || templateResponse.statusText}`,
+      )
     }
 
     const templateData = await templateResponse.json()
@@ -89,39 +92,19 @@ export async function POST(request: NextRequest) {
     let filledFields: Record<string, string> = {}
     try {
       // Attempt to parse the JSON output from the LLM
-      filledFields = JSON.parse(text)
+      // The LLM might wrap the JSON in markdown code blocks, so try to extract it
+      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/)
+      if (jsonMatch && jsonMatch[1]) {
+        filledFields = JSON.parse(jsonMatch[1])
+      } else {
+        filledFields = JSON.parse(text) // Fallback if not wrapped in markdown
+      }
     } catch (parseError) {
       console.error("Failed to parse LLM response as JSON:", parseError)
-      // Fallback: If parsing fails, try to extract common fields or return empty
-      // This is a basic fallback; a more robust solution might involve regex or another LLM call
-      if (documentType === "legal_notice") {
-        filledFields = {
-          sender_name: "",
-          sender_address: "",
-          recipient_name: "",
-          recipient_address: "",
-          date_of_notice: "",
-          subject: "",
-          details_of_claim: "",
-          action_demanded: "",
-          consequences: "",
-          signature: "",
-        }
-      } else if (documentType === "fir_draft") {
-        filledFields = {
-          complainant_name: "",
-          complainant_address: "",
-          complainant_contact: "",
-          incident_date: "",
-          incident_time: "",
-          incident_location: "",
-          facts_of_incident: "",
-          stolen_items: "",
-          witness_details: "",
-          requested_action: "",
-        }
-      }
-      // Add more fallbacks for other document types as needed
+      // Fallback: If parsing fails, create basic fields with placeholder values
+      Object.keys(templateFields).forEach((field) => {
+        filledFields[field] = `[Enter ${field.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}]`
+      })
     }
 
     // Merge with template fields to ensure all fields are present

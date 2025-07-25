@@ -161,15 +161,15 @@ export default function LegalRAGChat() {
         }),
       })
 
-      if (detectionResponse.ok) {
-        const result = await detectionResponse.json()
-        return result.detected_type
-      } else {
-        const errorData = await detectionResponse.json()
+      if (!detectionResponse.ok) {
+        const errorText = await detectionResponse.text() // Read as text if not OK
         throw new Error(
-          `Backend detection failed: ${detectionResponse.status} - ${errorData.detail || detectionResponse.statusText}`,
+          `Backend detection failed: ${detectionResponse.status} - ${errorText || detectionResponse.statusText}`,
         )
       }
+
+      const result = await detectionResponse.json()
+      return result.detected_type
     } catch (error) {
       console.error("Document type detection error:", error)
       toast({
@@ -196,15 +196,13 @@ export default function LegalRAGChat() {
         }),
       })
 
-      if (fillResponse.ok) {
-        const result = await fillResponse.json()
-        return result.filled_fields || {}
-      } else {
-        const errorData = await fillResponse.json()
-        throw new Error(
-          `LLM template filling failed: ${fillResponse.status} - ${errorData.detail || fillResponse.statusText}`,
-        )
+      if (!fillResponse.ok) {
+        const errorText = await fillResponse.text() // Read as text if not OK
+        throw new Error(`LLM template filling failed: ${fillResponse.status} - ${errorText || fillResponse.statusText}`)
       }
+
+      const result = await fillResponse.json()
+      return result.fields || {} // Changed from filled_fields to fields as per API route
     } catch (error) {
       console.error("Template filling error:", error)
       toast({
@@ -268,8 +266,8 @@ export default function LegalRAGChat() {
       })
 
       if (!docResponse.ok) {
-        const errorData = await docResponse.json()
-        throw new Error(`Backend request failed: ${docResponse.status} - ${errorData.detail || docResponse.statusText}`)
+        const errorText = await docResponse.text() // Read as text if not OK
+        throw new Error(`Backend request failed: ${docResponse.status} - ${errorText || docResponse.statusText}`)
       }
 
       const result = await docResponse.json()
@@ -357,8 +355,8 @@ export default function LegalRAGChat() {
       })
 
       if (!ragResponse.ok) {
-        const errorData = await ragResponse.json()
-        throw new Error(`RAG API request failed: ${ragResponse.status} - ${errorData.detail || ragResponse.statusText}`)
+        const errorText = await ragResponse.text() // Read as text if not OK
+        throw new Error(`RAG API request failed: ${ragResponse.status} - ${errorText || ragResponse.statusText}`)
       }
 
       const ragData: RAGResponse = await ragResponse.json()
@@ -389,16 +387,24 @@ Please provide a detailed, accurate response based on the legal sources provided
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: prompt,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a legal AI assistant specializing in Indian law. Provide accurate, detailed responses based on the legal documents provided. Always cite specific sections and sources in your responses. Be professional and precise in your language.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
         }),
         signal: abortControllerRef.current.signal,
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(
-          `OpenRouter API request failed: ${response.status} - ${errorData.detail || response.statusText}`,
-        )
+        const errorText = await response.text() // Read as text if not OK
+        throw new Error(`OpenRouter API request failed: ${response.status} - ${errorText || response.statusText}`)
       }
 
       const reader = response.body?.getReader()

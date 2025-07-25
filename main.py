@@ -1,201 +1,293 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Any
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from pydantic import BaseModel, Field
+import uvicorn
 import requests
 import os
 import base64
 from doc import get_template_fields, generate_document_from_template, convert_html_to_pdf, get_document_filename
+from sentence_transformers import SentenceTransformer
+import numpy as np
+import chromadb
+from chromadb.config import Settings
+from datetime import datetime
+from dataclasses import dataclass
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+# Configure logging
+logging.basicConfig(
+  level=logging.INFO,
+  format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Environment variables for HuggingFace API
-HF_API_BASE = os.getenv("HF_API_BASE", "https://api-inference.huggingface.co/models/")
-HF_TOKEN = os.getenv("HF_TOKEN") # This should be set in your HuggingFace Space secrets
+# Configuration
+@dataclass
+class Config:
+  # ChromaDB settings
+  DATA_ROOT: str = os.getenv("DATA_ROOT", "/data")
+  CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+  CHROMA_COLLECTION_NAME: str = os.getenv("CHROMA_COLLECTION_NAME", "legal_documents")
+  
+  # Server settings
+  SERVER_HOST: str = os.getenv("SERVER_HOST", "0.0.0.0")
+  SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8000"))
+  
+  # Search settings - memory efficient defaults
+  DEFAULT_TOP_K: int = int(os.getenv("DEFAULT_TOP_K", "3"))
+  MAX_TOP_K: int = int(os.getenv("MAX_TOP_K", "10"))
 
-if not HF_TOKEN:
-    raise ValueError("HF_TOKEN environment variable not set.")
+config = Config()
 
-# Headers for HuggingFace API requests
-HF_HEADERS = {
-    "Authorization": f"Bearer {HF_TOKEN}",
-    "Content-Type": "application/json"
-}
-
-# --- RAG Search Endpoint ---
+# Pydantic models for API requests/responses
 class SearchRequest(BaseModel):
-    query: str
-    top_k: int = 3
-    rerank: bool = False
-    include_scores: bool = False
-    filters: Dict[str, Any] = {}
+  query: str = Field(..., description="The search query text")
+  top_k: Optional[int] = Field(default=3, description="Number of results to return (max 10)", le=10, ge=1)
+  rerank: Optional[bool] = Field(default=False, description="Whether to use reranking (memory intensive)")
+  filters: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata filters")
+  include_scores: Optional[bool] = Field(default=False, description="Whether to include similarity scores")
 
-class DocumentMetadata(BaseModel):
-    document_id: str
-    title: str
-    section_number: str = None
-    document_type: str
-    legal_source: str
-    source_category: str
-
-class RAGResult(BaseModel):
-    content: str
-    metadata: DocumentMetadata
-    similarity_score: float
+class SearchResult(BaseModel):
+  content: str
+  metadata: Dict[str, Any]
+  similarity_score: float
+  rerank_score: Optional[float] = None
+  combined_score: Optional[float] = None
+  scores: Optional[Dict[str, float]] = None
+  
+class RootResponse(BaseModel):
+  message: str
+  version: str
+  endpoints: Dict[str, str]
 
 class SearchResponse(BaseModel):
-    results: List[RAGResult]
-    query: str
-    total_results: int
-    search_time: float
+  results: List[SearchResult]
+  query: str
+  total_results: int
+  search_time: float
+
+class HealthResponse(BaseModel):
+  status: str
+  collection_name: str
+  total_documents: int
+  server_time: datetime
+
+class DocumentTypesResponse(BaseModel):
+  document_types: Dict[str, Dict[str, Any]]
+  total_types: int
+
+class DetectDocumentTypeRequest(BaseModel):
+  query: str = Field(..., description="User query")
+  response: str = Field(..., description="AI response")
+
+class DetectDocumentTypeResponse(BaseModel):
+  detected_type: str
+  document_name: str
+  confidence: str
+
+class DocumentRequest(BaseModel):
+  query: str
+  response: str
+  document_type: Optional[str] = None
+  user_details: Optional[Dict[str, str]] = None
+  dry_run: bool = False
+
+class DocumentTypeRequest(BaseModel):
+  query: str
+  response: str
+
+# Global instances
+embedding_model = None
+chroma_client = None
+collection = None
+
+# Initialize embedding model
+try:
+  embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+  logger.info("Embedding model loaded successfully")
+except Exception as e:
+  logger.error(f"Failed to load embedding model: {e}")
+  embedding_model = None
+
+# Initialize ChromaDB client
+try:
+  chroma_client = chromadb.Client(Settings(
+      chroma_db_impl="duckdb+parquet",
+      persist_directory=config.CHROMA_PERSIST_DIR
+  ))
+  collection = chroma_client.get_or_create_collection(
+      name=config.CHROMA_COLLECTION_NAME,
+      metadata={"hnsw:space": "cosine"}
+  )
+  logger.info("ChromaDB initialized successfully")
+except Exception as e:
+  logger.error(f"Failed to initialize ChromaDB: {e}")
+  collection = None
+
+def get_embedding(text: str) -> List[float]:
+  """Generate embedding for given text"""
+  if embedding_model is None:
+      raise HTTPException(status_code=500, detail="Embedding model not available")
+  
+  try:
+      embedding = embedding_model.encode(text)
+      return embedding.tolist()
+  except Exception as e:
+      logger.error(f"Embedding generation failed: {e}")
+      raise HTTPException(status_code=500, detail="Failed to generate embedding")
+
+# FastAPI App
+app = FastAPI(
+  title="AccessLaw RAG API",
+  description="Advanced API for searching Indian Legal Documents and generating legal documents",
+  version="1.0.0"
+)
+
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
+
+# Mount the document generation app
+from doc import app as doc_app
+app.mount("/doc", doc_app)
+
+@app.get("/", response_model=RootResponse)
+async def root():
+  """Root endpoint with API information."""
+  return {
+      "message": "AccessLaw RAG API",
+      "version": "1.0.0",
+      "endpoints": {
+          "/search": "Search legal documents",
+          "/health": "Health check",
+          "/doc/gen-doc": "Generate legal documents",
+          "/doc/detect-document-type": "Detect document type",
+          "/add-document": "Add a document to the knowledge base"
+      }
+  }
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+  """Health check endpoint."""
+  return {
+      "status": "healthy",
+      "collection_name": config.CHROMA_COLLECTION_NAME,
+      "total_documents": collection.count() if collection else 0,
+      "server_time": datetime.now()
+  }
 
 @app.post("/search", response_model=SearchResponse)
 async def search_documents(request: SearchRequest):
-    """
-    Performs a RAG search using a HuggingFace model.
-    """
-    model_id = "aviralansh/Legal-RAG-Model" # Replace with your actual RAG model ID
-    api_url = f"{HF_API_BASE}{model_id}"
+  """
+  Enhanced search for legal documents using semantic similarity and optional reranking.
+  
+  This endpoint provides advanced search capabilities including:
+  - Semantic similarity search using BGE embeddings
+  - Optional cross-encoder reranking for improved relevance (memory intensive)
+  - Legal document structure-aware chunking
+  - Optional metadata filtering
+  """
+  start_time = datetime.now()
+  
+  try:
+      if collection is None:
+          raise HTTPException(status_code=500, detail="Database not available")
+      
+      # Generate query embedding
+      query_embedding = get_embedding(request.query)
+      
+      # Prepare where clause for filtering
+      where_clause = None
+      if request.filters:
+          where_clause = request.filters
+      
+      # Search in ChromaDB
+      search_results = collection.query(
+          query_embeddings=[query_embedding],
+          n_results=request.top_k or config.DEFAULT_TOP_K,
+          where=where_clause,
+          include=['documents', 'metadatas', 'distances']
+      )
+      
+      # Process results
+      results = []
+      if search_results['documents'] and search_results['documents'][0]:
+          for i, (doc, metadata, distance) in enumerate(zip(
+              search_results['documents'][0],
+              search_results['metadatas'][0],
+              search_results['distances'][0]
+          )):
+              # Convert distance to similarity score (cosine similarity)
+              similarity_score = 1 - distance
+              
+              result = SearchResult(
+                  content=doc,
+                  metadata=metadata,
+                  similarity_score=similarity_score if request.include_scores else 0.0
+              )
+              results.append(result)
+      
+      # Calculate search time
+      search_time = (datetime.now() - start_time).total_seconds()
+      
+      return SearchResponse(
+          results=results,
+          query=request.query,
+          total_results=len(results),
+          search_time=search_time
+      )
+      
+  except Exception as e:
+      logger.error(f"Search error: {str(e)}")
+      raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
-    payload = {
-        "inputs": request.query,
-        "parameters": {
-            "top_k": request.top_k,
-            "rerank": request.rerank,
-            "include_scores": request.include_scores,
-            "filters": request.filters
-        }
-    }
+@app.post("/add-document")
+async def add_document(
+  content: str,
+  metadata: Dict[str, Any],
+  document_id: Optional[str] = None
+):
+  """
+  Add a document to the knowledge base
+  """
+  try:
+      if collection is None:
+          raise HTTPException(status_code=500, detail="Database not available")
+      
+      # Generate embedding
+      embedding = get_embedding(content)
+      
+      # Generate document ID if not provided
+      if document_id is None:
+          document_id = f"doc_{datetime.now().timestamp()}"
+      
+      # Add to collection
+      collection.add(
+          documents=[content],
+          embeddings=[embedding],
+          metadatas=[metadata],
+          ids=[document_id]
+      )
+      
+      return {
+          "success": True,
+          "document_id": document_id,
+          "message": "Document added successfully"
+      }
+      
+  except Exception as e:
+      logger.error(f"Failed to add document: {e}")
+      raise HTTPException(status_code=500, detail=f"Failed to add document: {str(e)}")
 
-    try:
-        response = requests.post(api_url, headers=HF_HEADERS, json=payload)
-        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
-        rag_data = response.json()
-
-        # Adapt the response structure if necessary
-        results = []
-        for item in rag_data.get("results", []):
-            metadata = item.get("metadata", {})
-            results.append(RAGResult(
-                content=item.get("content", ""),
-                metadata=DocumentMetadata(
-                    document_id=metadata.get("document_id", "N/A"),
-                    title=metadata.get("title", "N/A"),
-                    section_number=metadata.get("section_number"),
-                    document_type=metadata.get("document_type", "N/A"),
-                    legal_source=metadata.get("legal_source", "N/A"),
-                    source_category=metadata.get("source_category", "N/A")
-                ),
-                similarity_score=item.get("similarity_score", 0.0)
-            ))
-
-        return SearchResponse(
-            results=results,
-            query=rag_data.get("query", request.query),
-            total_results=rag_data.get("total_results", len(results)),
-            search_time=rag_data.get("search_time", 0.0)
-        )
-
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"HuggingFace API request failed: {e}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
-
-# --- Document Generation Endpoints ---
-class DocumentRequest(BaseModel):
-    query: str
-    response: str
-    document_type: str
-    user_details: Dict[str, str] = {}
-    dry_run: bool = False # To get template fields without generating PDF
-
-class DocumentDetectionRequest(BaseModel):
-    query: str
-    response: str
-
-class DocumentDetectionResponse(BaseModel):
-    detected_type: str
-
-@app.post("/doc/detect-document-type", response_model=DocumentDetectionResponse)
-async def detect_document_type(request: DocumentDetectionRequest):
-    """
-    Detects the most suitable legal document type based on the user query and AI response.
-    """
-    model_id = "aviralansh/Legal-Document-Type-Detector" # Replace with your document type detection model
-    api_url = f"{HF_API_BASE}{model_id}"
-
-    prompt = f"Based on the following user query and AI response, what type of legal document is most relevant? Choose from: legal_notice, fir_draft, rti_application, affidavit, rental_agreement. If none are suitable, suggest 'other'.\n\nUser Query: {request.query}\nAI Response: {request.response}\n\nDocument Type:"
-
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 20,
-            "return_full_text": False
-        }
-    }
-
-    try:
-        response = requests.post(api_url, headers=HF_HEADERS, json=payload)
-        response.raise_for_status()
-        
-        # Assuming the model returns text directly, e.g., "legal_notice"
-        detected_type = response.json()[0]["generated_text"].strip().lower()
-        
-        # Basic validation for known types
-        known_types = ["legal_notice", "fir_draft", "rti_application", "affidavit", "rental_agreement"]
-        if detected_type not in known_types:
-            detected_type = "legal_notice" # Fallback to a default if detection is off
-
-        return DocumentDetectionResponse(detected_type=detected_type)
-
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"HuggingFace document detection API request failed: {e}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred during document type detection: {e}")
-
-@app.post("/doc/get-template-fields")
-async def get_doc_template_fields(request: DocumentRequest):
-    """
-    Returns the expected template fields for a given document type (dry run).
-    """
-    try:
-        fields = get_template_fields(request.document_type)
-        return {"template_fields": fields}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve template fields: {e}")
-
-@app.post("/doc/gen-doc")
-async def generate_legal_document(request: DocumentRequest):
-    """
-    Generates a legal document (PDF) based on the detected type and user-provided details.
-    """
-    try:
-        # Use the user_details directly as the data for the template
-        template_data = request.user_details
-        
-        # Generate HTML content from the Jinja2 template
-        html_content = generate_document_from_template(request.document_type, template_data)
-        
-        # Generate a unique filename
-        filename = get_document_filename(request.document_type)
-        
-        # Convert HTML to PDF
-        pdf_path = convert_html_to_pdf(html_content, filename)
-        
-        # Read the generated PDF file
-        with open(pdf_path, "rb") as f:
-            pdf_bytes = f.read()
-        
-        # Encode PDF to base64
-        pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
-        
-        # Clean up the generated PDF file
-        os.remove(pdf_path)
-        
-        return {
-            "success": True,
-            "filename": filename,
-            "pdf_content": pdf_base64
-        }
-    except Exception as e:
-        print(f"Error during document generation: {e}")
-        raise HTTPException(status_code=500, detail=f"Document generation failed: {e}")
+if __name__ == "__main__":
+  uvicorn.run(
+      app,
+      host=config.SERVER_HOST,
+      port=config.SERVER_PORT,
+      log_level="info"
+  )

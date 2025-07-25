@@ -26,10 +26,10 @@ export async function POST(req: Request) {
     })
 
     if (!docResponse.ok) {
-      const errorData = await docResponse.json()
-      console.error("Backend document generation error:", errorData)
+      const errorText = await docResponse.text() // Read as text if not OK
+      console.error("Backend document generation error:", errorText)
       return NextResponse.json(
-        { error: errorData.detail || "Backend document generation failed" },
+        { error: errorText || "Backend document generation failed" },
         { status: docResponse.status },
       )
     }

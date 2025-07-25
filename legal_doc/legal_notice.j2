@@ -5,80 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Legal Notice</title>
     <style>
-        body { font-family: 'Times New Roman', serif; line-height: 1.6; margin: 40px; color: #333; }
-        .container { width: 80%; margin: auto; border: 1px solid #ccc; padding: 30px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #0056b3; margin-bottom: 30px; font-size: 24px; }
-        .address-block { margin-bottom: 20px; }
-        .address-block p { margin: 0; }
-        .section { margin-bottom: 20px; }
-        .section-title { font-weight: bold; margin-bottom: 10px; text-decoration: underline; }
-        .content { margin-left: 20px; }
-        .signature-block { margin-top: 50px; text-align: right; }
-        .signature-line { border-top: 1px solid #000; width: 200px; margin-left: auto; margin-top: 5px; padding-top: 5px; }
-        .footer { margin-top: 50px; font-size: 12px; text-align: center; color: #666; }
-        .bold { font-weight: bold; }
-        .italic { font-style: italic; }
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 1in;
+            color: #333;
+        }
+        .container {
+            max-width: 6.5in;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 24pt;
+            margin-bottom: 0.5in;
+            text-transform: uppercase;
+        }
+        .header-info {
+            margin-bottom: 0.3in;
+        }
+        .header-info p {
+            margin: 0;
+        }
+        .section {
+            margin-bottom: 0.2in;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .signature-block {
+            margin-top: 0.75in;
+            text-align: right;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 3in;
+            margin-top: 0.2in;
+            padding-top: 0.05in;
+            margin-left: auto;
+        }
+        .date-place {
+            margin-top: 0.5in;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 1in;
+            text-align: center;
+            font-size: 10pt;
+            color: #777;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>LEGAL NOTICE</h1>
+        <h1>Legal Notice</h1>
 
-        <div class="address-block">
-            <p>From:</p>
-            <p><span class="bold">{{ sender_name | default('[Sender Name]') }}</span></p>
-            <p>{{ sender_address | default('[Sender Address]') }}</p>
-            <p>Date: <span class="bold">{{ date_of_notice | default('[Date of Notice]') }}</span></p>
+        <div class="header-info">
+            <p><span class="bold">From:</span></p>
+            <p>{{ sender_name | default("[Your Full Name]") }}</p>
+            <p>{{ sender_address | default("[Your Complete Address]") }}</p>
+            <p>Phone: {{ sender_phone | default("[Your Phone Number]") }}</p>
+            <p>Email: {{ sender_email | default("[Your Email Address]") }}</p>
+            <p>Date: {{ date_of_notice | default(current_date) }}</p>
         </div>
 
-        <div class="address-block">
-            <p>To:</p>
-            <p><span class="bold">{{ recipient_name | default('[Recipient Name]') }}</span></p>
-            <p>{{ recipient_address | default('[Recipient Address]') }}</p>
+        <div class="header-info">
+            <p><span class="bold">To:</span></p>
+            <p>{{ recipient_name | default("[Recipient's Full Name]") }}</p>
+            <p>{{ recipient_address | default("[Recipient's Complete Address]") }}</p>
         </div>
 
         <div class="section">
-            <p><span class="bold">Subject:</span> {{ subject | default('[Subject of Notice]') }}</p>
+            <p><span class="bold">Subject:</span> {{ subject | default("[Subject of the Legal Notice]") }}</p>
         </div>
 
         <div class="section">
             <p>Dear Sir/Madam,</p>
-            <p>Under instructions from and on behalf of our client, <span class="bold">{{ sender_name | default('[Sender Name]') }}</span>, residing at the above-mentioned address, I hereby serve upon you this legal notice:</p>
+            <p>Under instructions from and on behalf of my client, <span class="bold underline">{{ sender_name | default("[Your Full Name]") }}</span>, residing at <span class="bold underline">{{ sender_address | default("[Your Complete Address]") }}</span>, I hereby serve upon you the following legal notice:</p>
         </div>
 
         <div class="section">
-            <div class="section-title">Details of Claim:</div>
-            <div class="content">
-                <p>{{ details_of_claim | default('[Details of Claim]') | replace('\n', '<br>') | safe }}</p>
-            </div>
+            <ol>
+                <li>That my client states that {{ details_of_claim | default("[Detailed facts and circumstances leading to the claim, including dates, events, and relevant background information.]") }}</li>
+                <li>That you are hereby called upon to {{ action_demanded | default("[Specific action demanded from the recipient, e.g., 'pay the outstanding amount of Rs. [Amount] within [Number] days', 'rectify the breach of contract', 'cease and desist from certain actions'].") }}</li>
+                <li>That failing to comply with the above demand within the stipulated time, my client shall be constrained to initiate appropriate legal proceedings against you, entirely at your risk, cost, and consequences, without any further notice.</li>
+            </ol>
         </div>
 
         <div class="section">
-            <div class="section-title">Action Demanded:</div>
-            <div class="content">
-                <p>{{ action_demanded | default('[Action Demanded]') | replace('\n', '<br>') | safe }}</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Consequences of Non-Compliance:</div>
-            <div class="content">
-                <p>{{ consequences | default('[Consequences of Non-Compliance]') | replace('\n', '<br>') | safe }}</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <p>A copy of this notice is retained in my office for further necessary action.</p>
+            <p>A copy of this notice is kept in my office for record and further necessary action.</p>
         </div>
 
         <div class="signature-block">
             <p>Yours faithfully,</p>
-            <p>{{ signature | default('[Advocate/Sender Signature]') }}</p>
             <div class="signature-line"></div>
+            <p class="bold">{{ signature | default("[Advocate's Name/Sender's Name]") }}</p>
+            <p>Advocate (if applicable)</p>
         </div>
 
-        <div class="footer">
-            <p>Note: This is a draft legal notice. It is advisable to consult with a legal professional before sending any formal legal communication.</p>
+        <div class="date-place">
+            <p>Date: {{ date_of_notice | default(current_date) }}</p>
+            <p>Place: {{ place | default("[Place]") }}</p>
         </div>
     </div>
 </body>

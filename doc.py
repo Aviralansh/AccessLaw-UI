@@ -243,6 +243,9 @@ async def generate_document_endpoint(request: DocumentRequest):
         with open(pdf_path, "rb") as pdf_file:
             pdf_base64 = base64.b64encode(pdf_file.read()).decode('utf-8')
         
+        # Clean up the generated PDF file
+        os.remove(pdf_path)
+        
         return {
             "success": True,
             "document_type": request.document_type,

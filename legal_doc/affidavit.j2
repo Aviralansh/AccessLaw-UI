@@ -8,13 +8,14 @@
         body {
             font-family: 'Times New Roman', serif;
             line-height: 1.6;
-            margin: 40px;
+            margin: 0;
+            padding: 1in;
             color: #333;
             background: #fff;
         }
         .container {
-            width: 80%;
-            margin: auto;
+            max-width: 6.5in;
+            margin: 0 auto;
             border: 1px solid #ccc;
             padding: 30px;
             box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
@@ -22,11 +23,12 @@
         h1 {
             text-align: center;
             color: #0056b3;
-            margin-bottom: 30px;
-            font-size: 24px;
+            margin-bottom: 0.5in;
+            font-size: 24pt;
+            text-transform: uppercase;
         }
         .section {
-            margin-bottom: 20px;
+            margin-bottom: 0.2in;
         }
         .section-title {
             font-weight: bold;
@@ -54,18 +56,22 @@
             padding: 2px 5px;
         }
         .signature-block {
-            margin-top: 50px;
-            text-align: right;
+            margin-top: 0.75in;
+            text-align: left;
         }
         .signature-line {
             border-top: 1px solid #000;
-            width: 200px;
+            width: 3in;
             margin-left: auto;
-            margin-top: 5px;
-            padding-top: 5px;
+            margin-top: 0.2in;
+            padding-top: 0.05in;
+        }
+        .date-place {
+            margin-top: 0.5in;
+            text-align: left;
         }
         .footer {
-            margin-top: 50px;
+            margin-top: 1in;
             font-size: 12px;
             text-align: center;
             color: #666;
@@ -79,6 +85,12 @@
         .center {
             text-align: center;
         }
+        .underline {
+            text-decoration: underline;
+        }
+        .indent {
+            text-indent: 0.5in;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +98,7 @@
         <h1>AFFIDAVIT</h1>
 
         <div class="section">
-            <p>I, <span class="bold">{{ deponent_name | default('[Deponent Name]') }}</span>, son/daughter of <span class="bold">{{ father_name | default('[Father\'s Name]') }}</span>, aged about <span class="bold">{{ age | default('[Your Age]') }}</span> years, residing at <span class="bold">{{ deponent_address | default('[Your Complete Address]') }}</span>, by occupation <span class="bold">{{ occupation | default('[Your Occupation]') }}</span>, do hereby solemnly affirm and declare as under:</p>
+            I, <span class="bold underline">{{ deponent_name | default("[Deponent's Full Name]") }}</span>, son/daughter/wife of <span class="bold underline">{{ deponent_father_name | default("[Deponent's Father/Husband's Name]") }}</span>, aged about <span class="bold underline">{{ deponent_age | default("[Age]") }}</span> years, by occupation <span class="bold underline">{{ deponent_occupation | default("[Occupation]") }}</span>, residing at <span class="bold underline">{{ deponent_address | default("[Deponent's Full Address]") }}</span>, do hereby solemnly affirm and declare as under:
         </div>
 
         <div class="section">
@@ -96,42 +108,50 @@
                 <div class="field-value">{{ deponent_name | default('[Your Full Name]') }}</div>
             </div>
             <div class="form-field">
-                <div class="field-label">Father's Name:</div>
-                <div class="field-value">{{ father_name | default('[Father\'s Name]') }}</div>
+                <div class="field-label">Father's Name/Husband's Name:</div>
+                <div class="field-value">{{ deponent_father_name | default("[Deponent's Father/Husband's Name]") }}</div>
             </div>
             <div class="form-field">
                 <div class="field-label">Age:</div>
-                <div class="field-value">{{ age | default('[Your Age]') }}</div>
+                <div class="field-value">{{ deponent_age | default("[Age]") }}</div>
             </div>
             <div class="form-field">
                 <div class="field-label">Occupation:</div>
-                <div class="field-value">{{ occupation | default('[Your Occupation]') }}</div>
+                <div class="field-value">{{ deponent_occupation | default("[Occupation]") }}</div>
             </div>
             <div class="form-field">
                 <div class="field-label">Address:</div>
-                <div class="field-value">{{ deponent_address | default('[Your Complete Address]') }}</div>
+                <div class="field-value">{{ deponent_address | default("[Deponent's Full Address]") }}</div>
             </div>
         </div>
 
         <div class="section">
             <div class="section-title">Statement of Facts:</div>
             <div class="content">
-                <p>{{ statement_of_facts | default('1. That I am the deponent of this affidavit and I have personal knowledge of the facts stated herein.\n\n2. That [state the relevant facts and circumstances that form the basis of this affidavit].\n\n3. That [continue with additional facts as necessary].\n\n4. That the facts stated above are true to the best of my knowledge and belief.') | replace('\n', '<br>') | safe }}</p>
+                <ol>
+                    <li>That I am the deponent herein and am well conversant with the facts and circumstances hereunder stated.</li>
+                    <li>That the facts stated herein below are true and correct to the best of my knowledge and belief.</li>
+                    <li>That the contents of this affidavit are based on my personal knowledge and records.</li>
+                    <li>That I state that <span class="bold underline">{{ statement_of_facts | default("[Statement of Facts/Details of the Case]") }}</span>.</li>
+                    <li>That this affidavit is being filed for the purpose of <span class="bold underline">{{ purpose | default("[Purpose of Affidavit]") }}</span>.</li>
+                </ol>
             </div>
         </div>
 
         <div class="section">
-            <p>I state that the facts mentioned above are true and correct to the best of my knowledge and belief, and nothing material has been concealed therefrom.</p>
-        </div>
-
-        <div class="section">
-            <p>Solemnly affirmed and declared this <span class="bold">{{ current_date }}</span> at <span class="bold">{{ place | default('[Your City]') }}</span>.</p>
+            <p class="bold">VERIFICATION:</p>
+            <p class="indent">I, the above named deponent, do hereby verify on this <span class="bold underline">{{ date_of_affidavit | default("[Date of Affidavit]") }}</span> at <span class="bold underline">{{ place_of_affidavit | default("[Place of Affidavit]") }}</span> that the contents of the above affidavit are true and correct to my knowledge and belief and nothing material has been concealed therefrom.</p>
         </div>
 
         <div class="signature-block">
-            <p>DEPONENT</p>
+            <p>Deponent</p>
             <div class="signature-line"></div>
-            <p>(<span class="bold">{{ deponent_name | default('[Your Name]') }}</span>)</p>
+            <p class="bold">{{ deponent_name | default("[Deponent's Full Name]") }}</p>
+        </div>
+
+        <div class="date-place">
+            <p>Date: {{ current_date }}</p>
+            <p>Place: {{ place_of_affidavit | default("[Place of Affidavit]") }}</p>
         </div>
 
         <div class="footer">
