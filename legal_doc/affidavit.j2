@@ -1,16 +1,57 @@
-AFFIDAVIT
-
-I, {{ name }}, aged {{ age }} years, S/o/D/o {{ parent_name }}, residing at {{ address }}, do hereby solemnly affirm and declare as follows:
-
-1. That I am a citizen of India.  
-2. That {{ declaration_statement }}  
-3. That this affidavit is made to declare the above facts for {{ purpose }}
-
-I declare that the facts stated above are true to the best of my knowledge and belief.
-
-Place: {{ place }}  
-Date: {{ date }}
-
-Deponent:  
-(Signature) ___________________  
-Name: {{ name }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Affidavit</title>
+</head>
+<body>
+    <div class="header">
+        AFFIDAVIT
+    </div>
+    
+    <div class="content">
+        <p>I, {{ deponent_name }}, aged {{ deponent_age }} years, {{ deponent_occupation }}, resident of {{ deponent_address }}, do hereby solemnly affirm and state as under:</p>
+        
+        <div class="content">
+            <p><strong>1.</strong> That I am the deponent in the above matter and I am competent to swear this affidavit.</p>
+            
+            <p><strong>2.</strong> That the facts stated herein are true and correct to the best of my knowledge and belief and nothing material has been concealed therefrom.</p>
+            
+            {% if case_details %}
+            <p><strong>3.</strong> That this affidavit is being filed in connection with {{ case_details }}.</p>
+            {% endif %}
+            
+            <p><strong>4.</strong> {{ statement_facts }}</p>
+            
+            <p><strong>5.</strong> That this affidavit is made for the purpose of {{ purpose }}.</p>
+            
+            <p><strong>6.</strong> That I undertake to produce the original documents for verification whenever required.</p>
+        </div>
+        
+        <p>I do hereby solemnly affirm that the contents of this affidavit are true and correct and nothing has been concealed or misstated therein.</p>
+        
+        <p>Affirmed at {{ place }} on this {{ date }}.</p>
+    </div>
+    
+    <div class="signature">
+        <p><br><br>
+        ________________________<br>
+        {{ deponent_name }}<br>
+        (Deponent)</p>
+    </div>
+    
+    <div class="content">
+        <p><strong>VERIFICATION:</strong></p>
+        <p>I, {{ deponent_name }}, do hereby verify that the contents of the above affidavit are true and correct to the best of my knowledge and belief and no part of it is false and nothing material has been concealed therefrom.</p>
+        
+        <p>Verified at {{ place }} on {{ date }}.</p>
+    </div>
+    
+    <div class="signature">
+        <p><br><br>
+        ________________________<br>
+        {{ deponent_name }}<br>
+        (Deponent)</p>
+    </div>
+</body>
+</html>

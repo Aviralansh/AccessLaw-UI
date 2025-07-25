@@ -15,7 +15,7 @@ import uvicorn
 
 # Import the enhanced embedder and document generator
 from embedd_constitution import EnhancedLegalDocumentEmbedder
-from doc import LegalDocumentGenerator, DocumentGenerationRequest, DocumentGenerationResponse
+from doc import DocumentGenerator
 
 # Configure logging
 logging.basicConfig(
@@ -45,7 +45,7 @@ config = Config()
 # Pydantic models for API requests/responses
 class SearchRequest(BaseModel):
     query: str = Field(..., description="The search query text")
-    top_k: Optional[int] = Field(default=2, description="Number of results to return (max 10)", le=10, ge=1)
+    top_k: Optional[int] = Field(default=3, description="Number of results to return (max 10)", le=10, ge=1)
     rerank: Optional[bool] = Field(default=False, description="Whether to use reranking (memory intensive)")
     filters: Optional[Dict[str, Any]] = Field(default=None, description="Optional metadata filters")
     include_scores: Optional[bool] = Field(default=False, description="Whether to include similarity scores")
@@ -60,11 +60,8 @@ class SearchResult(BaseModel):
     
 class RootResponse(BaseModel):
     message: str
-    features: List[str]
-    docs: str
-    health: str
+    status: str
 
-    
 class SearchResponse(BaseModel):
     results: List[SearchResult]
     query: str
@@ -90,6 +87,17 @@ class DetectDocumentTypeResponse(BaseModel):
     document_name: str
     confidence: str
 
+class DocumentRequest(BaseModel):
+    query: str
+    response: str
+    document_type: Optional[str] = None
+    user_details: Optional[Dict[str, str]] = None
+    dry_run: bool = False
+
+class DocumentTypeRequest(BaseModel):
+    query: str
+    response: str
+
 # Global instances
 embedder = None
 doc_generator = None
@@ -109,7 +117,7 @@ async def lifespan(app: FastAPI):
         )
         
         # Initialize document generator
-        doc_generator = LegalDocumentGenerator(templates_dir="legal_doc")
+        doc_generator = DocumentGenerator()
         
         # Get collection info
         collection_stats = embedder.get_collection_stats()
@@ -133,7 +141,7 @@ async def lifespan(app: FastAPI):
 
 # FastAPI App
 app = FastAPI(
-    title="Enhanced Legal Search & Document Generation API",
+    title="AccessLaw Document Generator API",
     description="Advanced API for searching Indian Legal Documents and generating legal documents",
     version="2.1.0",
     lifespan=lifespan
@@ -151,10 +159,8 @@ app.add_middleware(
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "Enhanced Legal Search & Document Generation API is running",
-        "features": ["Semantic search", "Cross-encoder reranking", "Legal document chunking", "Document generation"],
-        "docs": "/docs",
-        "health": "/health"
+        "message": "AccessLaw Document Generator API",
+        "status": "active"
     }
 
 @app.get("/health", response_model=HealthResponse)
@@ -289,8 +295,8 @@ async def get_document_types():
         logger.error(f"Error getting document types: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to get document types: {str(e)}")
 
-@app.post("/gen-doc", response_model=DocumentGenerationResponse)
-async def generate_document(request: DocumentGenerationRequest):
+@app.post("/gen-doc")
+async def generate_document(request: DocumentRequest):
     """
     Generate legal document based on query and response context.
     
@@ -306,7 +312,13 @@ async def generate_document(request: DocumentGenerationRequest):
     try:
         logger.info(f"Generating document for query: {request.query[:100]}...")
         
-        result = doc_generator.generate_document(request)
+        result = doc_generator.generate_document(
+            query=request.query,
+            response=request.response,
+            doc_type=request.document_type,
+            user_details=request.user_details,
+            dry_run=request.dry_run
+        )
         
         logger.info(f"Document generated successfully: {result.document_type} in {result.generation_time:.2f}s")
         
@@ -317,7 +329,7 @@ async def generate_document(request: DocumentGenerationRequest):
         raise HTTPException(status_code=500, detail=f"Document generation failed: {str(e)}")
 
 @app.post("/gen-doc/download")
-async def download_generated_document(request: DocumentGenerationRequest):
+async def download_generated_document(request: DocumentRequest):
     """
     Generate and download legal document as PDF.
     """
@@ -325,7 +337,13 @@ async def download_generated_document(request: DocumentGenerationRequest):
         raise HTTPException(status_code=503, detail="Document generation service not initialized")
     
     try:
-        result = doc_generator.generate_document(request)
+        result = doc_generator.generate_document(
+            query=request.query,
+            response=request.response,
+            doc_type=request.document_type,
+            user_details=request.user_details,
+            dry_run=request.dry_run
+        )
         
         return Response(
             content=result.pdf_content,
@@ -340,14 +358,11 @@ async def download_generated_document(request: DocumentGenerationRequest):
         logger.error(f"Document download error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Document download failed: {str(e)}")
 
-@app.post("/detect-document-type", response_model=DetectDocumentTypeResponse)
-async def detect_document_type(request: DetectDocumentTypeRequest):
+@app.post("/detect-document-type")
+async def detect_document_type(request: DocumentTypeRequest):
     """
-    Detect the most appropriate document type for given query and response.
+    Detect the type of legal document needed based on query and response
     """
-    if not doc_generator:
-        raise HTTPException(status_code=503, detail="Document generation service not initialized")
-    
     try:
         detected_type = doc_generator.detect_document_type(request.query, request.response)
         doc_info = doc_generator.document_types[detected_type]

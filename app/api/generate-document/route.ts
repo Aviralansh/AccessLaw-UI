@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { query, response, document_type, user_details } = await req.json()
+    const body = await request.json()
+    const { query, response, document_type, user_details } = body
 
-    // Call the FastAPI backend for document generation - Updated endpoint
+    // Forward the request to the Python backend
     const backendResponse = await fetch("https://aviralansh-accesslaw-doc.hf.space/gen-doc", {
       method: "POST",
       headers: {
@@ -14,26 +15,17 @@ export async function POST(req: NextRequest) {
         query,
         response,
         document_type,
-        user_details: user_details || {},
+        user_details,
       }),
     })
 
     if (!backendResponse.ok) {
-      const errorText = await backendResponse.text()
-      console.error("Backend API error:", errorText)
-      throw new Error(`Backend API error: ${backendResponse.status}`)
+      throw new Error(`Backend request failed: ${backendResponse.status}`)
     }
 
     const result = await backendResponse.json()
 
-    return NextResponse.json({
-      success: result.success,
-      document_type: result.document_type,
-      filename: result.filename,
-      pdf_content: Buffer.from(result.pdf_content).toString("base64"),
-      template_fields: result.template_fields,
-      generation_time: result.generation_time,
-    })
+    return NextResponse.json(result)
   } catch (error) {
     console.error("Document generation error:", error)
     return NextResponse.json({ error: "Failed to generate document" }, { status: 500 })

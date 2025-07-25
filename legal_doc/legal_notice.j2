@@ -1,21 +1,60 @@
-To,  
-{{ recipient_name }}  
-{{ recipient_address }}
-
-Date: {{ notice_date }}
-
-Subject: Legal Notice Regarding {{ subject }}
-
-Dear {{ recipient_name }},
-
-I, {{ sender_name }}, residing at {{ sender_address }}, hereby issue this legal notice against you regarding the following matter:
-
-{{ notice_content }}
-
-You are hereby called upon to resolve this matter within {{ resolution_days }} days from the date of receipt of this notice, failing which I shall be compelled to initiate appropriate legal proceedings at your risk and cost.
-
-This notice is sent without prejudice to my rights and claims under the law.
-
-Sincerely,  
-{{ sender_name }}  
-Contact: {{ sender_contact }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Legal Notice</title>
+</head>
+<body>
+    <div class="header">
+        LEGAL NOTICE
+    </div>
+    
+    <div class="content">
+        <p><strong>To:</strong><br>
+        {{ recipient_name }}<br>
+        {{ recipient_address }}</p>
+        
+        <p><strong>From:</strong><br>
+        {{ sender_name }}<br>
+        {{ sender_address }}<br>
+        Phone: {{ sender_phone }}<br>
+        Email: {{ sender_email }}</p>
+        
+        <p><strong>Subject:</strong> {{ subject }}</p>
+        
+        <p>Sir/Madam,</p>
+        
+        <p>TAKE NOTICE that my client has instructed me to serve upon you the following legal notice:</p>
+        
+        <div class="content">
+            <p><strong>FACTS:</strong></p>
+            <p>{{ facts }}</p>
+        </div>
+        
+        <div class="content">
+            <p><strong>DEMAND:</strong></p>
+            <p>{{ demand }}</p>
+        </div>
+        
+        <p>TAKE FURTHER NOTICE that if you fail to comply with the above demand within {{ time_limit }} from the receipt of this notice, my client will be constrained to take appropriate legal action against you including but not limited to:</p>
+        
+        <div class="content">
+            <p>{{ consequences }}</p>
+        </div>
+        
+        <p>You are hereby called upon to comply with the above demand within the stipulated time to avoid unnecessary litigation and costs.</p>
+        
+        <p>This notice is served upon you under Section 80 of the Code of Civil Procedure, 1908, and other applicable provisions of law.</p>
+    </div>
+    
+    <div class="date-place">
+        <p>Date: {{ date }}<br>
+        Place: {{ place }}</p>
+    </div>
+    
+    <div class="signature">
+        <p>Yours faithfully,<br><br>
+        {{ sender_name }}</p>
+    </div>
+</body>
+</html>

@@ -1,24 +1,63 @@
-To,
-The Officer-in-Charge,
-{{ police_station }},
-{{ station_address }}
-
-Subject: Filing of an FIR regarding {{ incident_type }}
-
-Respected Sir/Madam,
-
-I, {{ complainant_name }}, S/o/D/o {{ parent_name }}, residing at {{ complainant_address }}, wish to lodge a complaint regarding the following incident:
-
-Date & Time: {{ incident_date_time }}  
-Location: {{ incident_location }}  
-Incident Description:  
-{{ incident_description }}
-
-I request you to kindly register this complaint as an FIR and take necessary legal action. I am ready to cooperate fully in the investigation process.
-
-Thank you.
-
-Sincerely,  
-{{ complainant_name }}  
-Contact: {{ complainant_contact }}  
-Date: {{ submission_date }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>FIR Draft</title>
+</head>
+<body>
+    <div class="header">
+        FIRST INFORMATION REPORT (FIR) DRAFT
+    </div>
+    
+    <div class="content">
+        <p><strong>To:</strong><br>
+        The Station House Officer<br>
+        {{ police_station }}</p>
+        
+        <p><strong>Subject:</strong> Complaint for registration of FIR</p>
+        
+        <p>Sir,</p>
+        
+        <p>I, {{ complainant_name }}, resident of {{ complainant_address }}, hereby lodge this complaint for registration of FIR regarding the following incident:</p>
+        
+        <div class="content">
+            <p><strong>Details of the Incident:</strong></p>
+            <p><strong>Date of Incident:</strong> {{ incident_date }}</p>
+            <p><strong>Time of Incident:</strong> {{ incident_time }}</p>
+            <p><strong>Place of Incident:</strong> {{ incident_place }}</p>
+        </div>
+        
+        <div class="content">
+            <p><strong>Details of Accused:</strong></p>
+            <p><strong>Name:</strong> {{ accused_name }}</p>
+            <p><strong>Address:</strong> {{ accused_address }}</p>
+        </div>
+        
+        <div class="content">
+            <p><strong>Description of Incident:</strong></p>
+            <p>{{ incident_description }}</p>
+        </div>
+        
+        <div class="content">
+            <p><strong>Witnesses:</strong></p>
+            <p>{{ witnesses }}</p>
+        </div>
+        
+        <p>I request you to kindly register an FIR in this matter and take necessary legal action against the accused person(s). I am ready to cooperate in the investigation.</p>
+        
+        <p>I hereby declare that the above information is true to the best of my knowledge and belief.</p>
+    </div>
+    
+    <div class="date-place">
+        <p>Date: {{ date }}<br>
+        Place: {{ place }}</p>
+    </div>
+    
+    <div class="signature">
+        <p>Yours faithfully,<br><br>
+        {{ complainant_name }}<br>
+        Address: {{ complainant_address }}<br>
+        Phone: {{ complainant_phone }}</p>
+    </div>
+</body>
+</html>

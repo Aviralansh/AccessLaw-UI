@@ -54,6 +54,7 @@ interface Message {
   totalTime?: number
   isStreaming?: boolean
   isSearching?: boolean
+  hasError?: boolean
 }
 
 interface QueryParams {
@@ -128,7 +129,12 @@ export default function LegalRAGChat() {
         if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
           return [
             ...prev.slice(0, -1),
-            { ...lastMessage, isStreaming: false, content: lastMessage.content + " [Response stopped]" },
+            {
+              ...lastMessage,
+              isStreaming: false,
+              isSearching: false,
+              content: lastMessage.content + " [Response stopped]",
+            },
           ]
         }
         return prev
@@ -188,7 +194,7 @@ export default function LegalRAGChat() {
 
   const openDocumentDialog = async () => {
     // Get the last user message and assistant response
-    const lastAssistantMessage = messages.filter((m) => m.type === "assistant" && !m.isStreaming).pop()
+    const lastAssistantMessage = messages.filter((m) => m.type === "assistant" && !m.isStreaming && !m.hasError).pop()
     const lastUserMessage = messages.filter((m) => m.type === "user").pop()
 
     if (!lastAssistantMessage || !lastUserMessage) {
@@ -287,6 +293,7 @@ export default function LegalRAGChat() {
       timestamp: new Date(),
       isStreaming: true,
       isSearching: true,
+      hasError: false,
     }
 
     setMessages((prev) => [...prev, assistantMessage])
@@ -389,19 +396,37 @@ Please provide a detailed, accurate response based on the legal sources provided
       const endTime = Date.now()
       const totalTime = endTime - startTime
 
-      // Update final message
+      // Update final message - mark as completely finished
       setMessages((prev) =>
-        prev.map((msg) => (msg.id === assistantMessageId ? { ...msg, isStreaming: false, totalTime } : msg)),
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                isStreaming: false,
+                isSearching: false,
+                totalTime,
+                hasError: false,
+              }
+            : msg,
+        ),
       )
     } catch (error) {
       console.error("Error:", error)
-      const errorMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        type: "assistant",
-        content: "Sorry, I encountered an error while processing your request. Please try again.",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
+
+      // Update the assistant message to show error state
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                isStreaming: false,
+                isSearching: false,
+                hasError: true,
+                content: "Sorry, I encountered an error while processing your request. Please try again.",
+              }
+            : msg,
+        ),
+      )
     } finally {
       setIsLoading(false)
       abortControllerRef.current = null
@@ -440,9 +465,10 @@ Please provide a detailed, accurate response based on the legal sources provided
     )
   }
 
-  // Get the last assistant message that's not streaming
-  const lastAssistantMessage = messages.filter((m) => m.type === "assistant" && !m.isStreaming).pop()
-  const hasCompletedResponse = lastAssistantMessage && !lastAssistantMessage.isStreaming
+  // Get the last assistant message that's completely finished (not streaming, no error)
+  const lastCompletedAssistantMessage = messages
+    .filter((m) => m.type === "assistant" && !m.isStreaming && !m.hasError && m.content.trim())
+    .pop()
 
   return (
     <TooltipProvider>
@@ -715,7 +741,7 @@ Please provide a detailed, accurate response based on the legal sources provided
                                 )}
                               </div>
 
-                              {message.ragResponse && (
+                              {message.ragResponse && !message.hasError && (
                                 <div
                                   className="space-y-3 pt-4 border-t border-current/20 animate-slide-in-up"
                                   style={{ animationDelay: "300ms" }}
@@ -801,7 +827,7 @@ Please provide a detailed, accurate response based on the legal sources provided
                               )}
 
                               {/* Generate Document Button - Only show for the last completed assistant message */}
-                              {message === lastAssistantMessage && !message.isStreaming && (
+                              {message === lastCompletedAssistantMessage && (
                                 <div className="mt-4 pt-3 border-t border-current/20">
                                   <Dialog open={showDocDialog} onOpenChange={setShowDocDialog}>
                                     <DialogTrigger asChild>
