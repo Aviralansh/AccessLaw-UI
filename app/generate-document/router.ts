@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_HF_TOKEN}`,
       },
       body: JSON.stringify({
         query,
