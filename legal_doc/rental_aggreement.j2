@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rental Agreement</title>
+</head>
+<body>
+    <div class="header">
+        RENTAL AGREEMENT
+    </div>
+    
+    <div class="content">
+        <p>This Rental Agreement is made on {{ agreement_date }} at {{ place }} between:</p>
+        
+        <p><strong>LANDLORD:</strong><br>
+        {{ landlord_name }}<br>
+        Address: {{ landlord_address }}<br>
+        Phone: {{ landlord_phone }}</p>
+        
+        <p>(Hereinafter referred to as "LANDLORD" which expression shall mean and include his/her heirs, successors, legal representatives and assigns)</p>
+        
+        <p><strong>AND</strong></p>
+        
+        <p><strong>TENANT:</strong><br>
+        {{ tenant_name }}<br>
+        Address: {{ tenant_address }}<br>
+        Phone: {{ tenant_phone }}</p>
+        
+        <p>(Hereinafter referred to as "TENANT" which expression shall mean and include his/her heirs, successors, legal representatives and assigns)</p>
+        
+        <div class="content">
+            <p><strong>PROPERTY DETAILS:</strong></p>
+            <p><strong>Address:</strong> {{ property_address }}</p>
+            <p><strong>Description:</strong> {{ property_description }}</p>
+        </div>
+        
+        <div class="content">
+            <p><strong>TERMS AND CONDITIONS:</strong></p>
+            
+            <p><strong>1. RENT:</strong> The monthly rent for the said property is Rs. {{ rent_amount }}, payable in advance on or before the 5th day of each month.</p>
+            
+            <p><strong>2. SECURITY DEPOSIT:</strong> The tenant has paid a security deposit of Rs. {{ deposit_amount }} which shall be refunded at the time of vacating the premises, subject to deductions for any damages or unpaid dues.</p>
+            
+            <p><strong>3. LEASE PERIOD:</strong> This agreement shall commence from {{ start_date }} for a period of {{ duration_months }} months.</p>
+            
+            <p><strong>4. MAINTENANCE:</strong> The tenant shall maintain the property in good condition and shall be responsible for minor repairs and maintenance.</p>
+            
+            <p><strong>5. UTILITIES:</strong> All utility bills including electricity, water, gas, etc., shall be borne by the tenant.</p>
+            
+            <p><strong>6. TERMINATION:</strong> Either party may terminate this agreement by giving one month's written notice to the other party.</p>
+            
+            <p><strong>7. ADDITIONAL TERMS:</strong></p>
+            <p>{{ other_terms }}</p>
+        </div>
+        
+        <p>Both parties agree to abide by all the terms and conditions mentioned above. Any dispute arising out of this agreement shall be subject to the jurisdiction of courts at {{ place }}.</p>
+    </div>
+    
+    <div class="signature">
+        <p><strong>LANDLORD:</strong><br><br>
+        ________________________<br>
+        {{ landlord_name }}</p>
+        
+        <p><strong>TENANT:</strong><br><br>
+        ________________________<br>
+        {{ tenant_name }}</p>
+    </div>
+    
+    <div class="content">
+        <p><strong>WITNESSES:</strong></p>
+        <p>1. ________________________</p>
+        <p>2. ________________________</p>
+    </div>
+</body>
+</html>

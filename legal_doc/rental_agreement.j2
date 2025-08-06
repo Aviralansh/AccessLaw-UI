@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Agreement</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        .clause {
+            margin-bottom: 15px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            text-align: center;
+            width: 45%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 200px;
+            margin: 20px auto;
+        }
+        .parties-section {
+            margin-bottom: 30px;
+        }
+        .witness-section {
+            margin-top: 40px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">RENTAL AGREEMENT</div>
+    </div>
+
+    <div class="section">
+        This Rental Agreement is made on {{ current_date }} between:
+    </div>
+
+    <div class="parties-section">
+        <strong>LANDLORD/LESSOR:</strong><br>
+        Name: {{ landlord_name or "[Landlord's Full Name]" }}<br>
+        Father's/Husband's Name: {{ landlord_father_name or "[Father's/Husband's Name]" }}<br>
+        Address: {{ landlord_address or "[Landlord's Complete Address]" }}<br>
+        Phone: {{ landlord_phone or "[Landlord's Phone Number]" }}<br>
+        Email: {{ landlord_email or "[Landlord's Email]" }}<br>
+        (Hereinafter referred to as "LANDLORD")
+    </div>
+
+    <div class="parties-section">
+        <strong>TENANT/LESSEE:</strong><br>
+        Name: {{ tenant_name or "[Tenant's Full Name]" }}<br>
+        Father's/Husband's Name: {{ tenant_father_name or "[Father's/Husband's Name]" }}<br>
+        Address: {{ tenant_address or "[Tenant's Complete Address]" }}<br>
+        Phone: {{ tenant_phone or "[Tenant's Phone Number]" }}<br>
+        Email: {{ tenant_email or "[Tenant's Email]" }}<br>
+        (Hereinafter referred to as "TENANT")
+    </div>
+
+    <div class="section">
+        <strong>PROPERTY DETAILS:</strong><br>
+        The property located at: {{ property_address or "[Complete Property Address]" }}<br>
+        Type: {{ property_type or "[Apartment/House/Commercial Space]" }}<br>
+        Area: {{ property_area or "[Area in sq ft]" }}<br>
+        Furnishing: {{ furnishing_status or "[Furnished/Semi-Furnished/Unfurnished]" }}
+    </div>
+
+    <div class="section">
+        <strong>TERMS AND CONDITIONS:</strong>
+    </div>
+
+    <div class="clause">
+        <strong>1. RENT:</strong> The monthly rent for the said property is Rs. {{ monthly_rent or "[Monthly Rent Amount]" }}/- (Rupees {{ rent_in_words or "[Rent in Words]" }} only) payable on or before {{ rent_due_date or "5th" }} of each month.
+    </div>
+
+    <div class="clause">
+        <strong>2. SECURITY DEPOSIT:</strong> The tenant has paid a security deposit of Rs. {{ security_deposit or "[Security Deposit Amount]" }}/- (Rupees {{ deposit_in_words or "[Deposit in Words]" }} only) which shall be refunded at the time of vacating the premises after deducting any dues.
+    </div>
+
+    <div class="clause">
+        <strong>3. LEASE PERIOD:</strong> This agreement is for a period of {{ lease_period or "[Lease Duration]" }} commencing from {{ start_date or "[Start Date]" }} and ending on {{ end_date or "[End Date]" }}.
+    </div>
+
+    <div class="clause">
+        <strong>4. MAINTENANCE:</strong> {{ maintenance_clause or "The tenant shall maintain the property in good condition and shall be responsible for minor repairs. Major structural repairs shall be borne by the landlord." }}
+    </div>
+
+    <div class="clause">
+        <strong>5. UTILITIES:</strong> {{ utilities_clause or "Electricity, water, gas, and other utility charges shall be borne by the tenant." }}
+    </div>
+
+    <div class="clause">
+        <strong>6. SUBLETTING:</strong> The tenant shall not sublet or transfer the tenancy rights to any third party without written consent of the landlord.
+    </div>
+
+    <div class="clause">
+        <strong>7. TERMINATION:</strong> Either party may terminate this agreement by giving {{ notice_period or "30" }} days written notice to the other party.
+    </div>
+
+    <div class="clause">
+        <strong>8. RENEWAL:</strong> This agreement may be renewed by mutual consent of both parties with revised terms if any.
+    </div>
+
+    <div class="clause">
+        <strong>9. LEGAL JURISDICTION:</strong> Any disputes arising out of this agreement shall be subject to the jurisdiction of courts at {{ jurisdiction or "[City Name]" }}.
+    </div>
+
+    <div class="clause">
+        <strong>10. ADDITIONAL TERMS:</strong><br>
+        {{ additional_terms or "[Any additional terms and conditions agreed upon by both parties]" }}
+    </div>
+
+    <div class="section">
+        Both parties have read and understood all the terms and conditions mentioned above and agree to abide by them.
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div><strong>LANDLORD</strong></div>
+            <div>{{ landlord_name or "[Landlord's Name]" }}</div>
+            <div>Date: {{ current_date }}</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div><strong>TENANT</strong></div>
+            <div>{{ tenant_name or "[Tenant's Name]" }}</div>
+            <div>Date: {{ current_date }}</div>
+        </div>
+    </div>
+
+    <div class="witness-section">
+        <strong>WITNESSES:</strong><br><br>
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <div class="signature-line"></div>
+                <div><strong>Witness 1</strong></div>
+                <div>Name: {{ witness_1_name or "[Witness 1 Name]" }}</div>
+                <div>Address: {{ witness_1_address or "[Witness 1 Address]" }}</div>
+                <div>Phone: {{ witness_1_phone or "[Witness 1 Phone]" }}</div>
+            </div>
+            <div>
+                <div class="signature-line"></div>
+                <div><strong>Witness 2</strong></div>
+                <div>Name: {{ witness_2_name or "[Witness 2 Name]" }}</div>
+                <div>Address: {{ witness_2_address or "[Witness 2 Address]" }}</div>
+                <div>Phone: {{ witness_2_phone or "[Witness 2 Phone]" }}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

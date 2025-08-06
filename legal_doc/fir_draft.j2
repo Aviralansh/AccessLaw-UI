@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIR Draft</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .field-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 180px;
+        }
+        .field-value {
+            display: inline-block;
+            border-bottom: 1px solid #333;
+            min-width: 300px;
+            padding-bottom: 2px;
+        }
+        .content-box {
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 20px 0;
+            min-height: 120px;
+        }
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            text-align: center;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 200px;
+            margin: 20px 0;
+        }
+        .police-station {
+            text-align: right;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="police-station">
+        Police Station: {{ police_station or "[Police Station Name]" }}
+    </div>
+
+    <div class="header">
+        <div class="title">FIRST INFORMATION REPORT</div>
+        <div class="subtitle">(Under Section 154 Cr.P.C.)</div>
+    </div>
+
+    <div class="section">
+        <span class="field-label">FIR No.:</span>
+        <span class="field-value">{{ fir_number or "[To be filled by Police]" }}</span>
+    </div>
+
+    <div class="section">
+        <span class="field-label">Date:</span>
+        <span class="field-value">{{ current_date }}</span>
+    </div>
+
+    <div class="section">
+        <span class="field-label">Time:</span>
+        <span class="field-value">{{ time or "[Time of Complaint]" }}</span>
+    </div>
+
+    <div class="section">
+        <span class="field-label">Act/Section:</span>
+        <span class="field-value">{{ sections or "[Relevant IPC Sections]" }}</span>
+    </div>
+
+    <div class="section">
+        <strong>COMPLAINANT DETAILS:</strong><br>
+        Name: {{ complainant_name or "[Your Full Name]" }}<br>
+        Father's/Husband's Name: {{ father_husband_name or "[Father's/Husband's Name]" }}<br>
+        Age: {{ age or "[Age]" }} years<br>
+        Address: {{ complainant_address or "[Your Complete Address]" }}<br>
+        Phone: {{ phone or "[Your Phone Number]" }}<br>
+        Occupation: {{ occupation or "[Your Occupation]" }}
+    </div>
+
+    <div class="section">
+        <strong>ACCUSED DETAILS:</strong><br>
+        Name: {{ accused_name or "[Name of Accused if known]" }}<br>
+        Father's Name: {{ accused_father_name or "[Father's Name if known]" }}<br>
+        Address: {{ accused_address or "[Address if known]" }}<br>
+        Age: {{ accused_age or "[Age if known]" }}<br>
+        Other Details: {{ accused_details or "[Any other identifying information]" }}
+    </div>
+
+    <div class="section">
+        <strong>PLACE OF OCCURRENCE:</strong><br>
+        {{ place_of_occurrence or "[Exact location where the incident occurred]" }}
+    </div>
+
+    <div class="section">
+        <strong>DATE & TIME OF OCCURRENCE:</strong><br>
+        Date: {{ occurrence_date or "[Date of Incident]" }}<br>
+        Time: {{ occurrence_time or "[Time of Incident]" }}
+    </div>
+
+    <div class="content-box">
+        <strong>DETAILS OF THE COMPLAINT:</strong><br><br>
+        {{ complaint_details or "[Provide detailed description of the incident. Include what happened, when it happened, who was involved, and any other relevant circumstances. Be specific and factual.]" }}
+    </div>
+
+    <div class="section">
+        <strong>WITNESSES:</strong><br>
+        1. {{ witness_1 or "[Name and address of witness 1]" }}<br>
+        2. {{ witness_2 or "[Name and address of witness 2]" }}<br>
+        3. {{ witness_3 or "[Name and address of witness 3]" }}
+    </div>
+
+    <div class="section">
+        <strong>DOCUMENTS/EVIDENCE ATTACHED:</strong><br>
+        {{ evidence or "[List any documents, photographs, or other evidence attached]" }}
+    </div>
+
+    <div class="section">
+        <strong>PRAYER:</strong><br>
+        I request you to kindly register the above complaint and take necessary legal action against the accused person(s) as per law. I also request for a copy of the FIR for my records.
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div><strong>Signature of Complainant</strong></div>
+            <div>{{ complainant_name or "[Your Name]" }}</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div><strong>Signature of Police Officer</strong></div>
+            <div>[Name & Designation]</div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-top: 40px; border-top: 1px solid #333; padding-top: 20px;">
+        <strong>FOR OFFICE USE ONLY:</strong><br>
+        FIR registered and copy given to the complainant.<br><br>
+        Station House Officer<br>
+        {{ police_station or "[Police Station Name]" }}
+    </div>
+</body>
+</html>

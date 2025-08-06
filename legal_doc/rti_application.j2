@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RTI Application</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .field-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .field-value {
+            display: inline-block;
+            border-bottom: 1px solid #333;
+            min-width: 300px;
+            padding-bottom: 2px;
+        }
+        .content-box {
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 20px 0;
+            min-height: 100px;
+        }
+        .signature-section {
+            margin-top: 40px;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 200px;
+            margin: 20px 0;
+        }
+        .date-place {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">APPLICATION UNDER RIGHT TO INFORMATION ACT, 2005</div>
+    </div>
+
+    <div class="section">
+        <span class="field-label">To:</span>
+        <span class="field-value">{{ public_information_officer or "The Public Information Officer" }}</span>
+    </div>
+
+    <div class="section">
+        <span class="field-label">Department:</span>
+        <span class="field-value">{{ department or "[Department Name]" }}</span>
+    </div>
+
+    <div class="section">
+        <span class="field-label">Office Address:</span>
+        <span class="field-value">{{ office_address or "[Office Address]" }}</span>
+    </div>
+
+    <div class="section">
+        <strong>Subject: Application for information under Right to Information Act, 2005</strong>
+    </div>
+
+    <div class="section">
+        <p>Sir/Madam,</p>
+        <p>I, <strong>{{ applicant_name or "[Your Full Name]" }}</strong>, a citizen of India, hereby request the following information under the Right to Information Act, 2005:</p>
+    </div>
+
+    <div class="content-box">
+        <strong>Information Requested:</strong><br>
+        {{ information_requested or "[Describe the specific information you are seeking. Be as detailed and specific as possible.]" }}
+    </div>
+
+    <div class="section">
+        <strong>Purpose of Information:</strong><br>
+        {{ purpose or "[State the purpose for which you need this information]" }}
+    </div>
+
+    <div class="section">
+        <strong>Period of Information:</strong><br>
+        From: {{ period_from or "[Start Date]" }} To: {{ period_to or "[End Date]" }}
+    </div>
+
+    <div class="section">
+        <strong>Mode of receiving information:</strong><br>
+        ☐ Inspection of records<br>
+        ☐ Certified copies<br>
+        ☐ Email: {{ email or "[Your Email]" }}<br>
+        ☐ Post to address mentioned below
+    </div>
+
+    <div class="section">
+        <strong>Applicant Details:</strong><br>
+        Name: {{ applicant_name or "[Your Full Name]" }}<br>
+        Address: {{ applicant_address or "[Your Complete Address]" }}<br>
+        Phone: {{ phone or "[Your Phone Number]" }}<br>
+        Email: {{ email or "[Your Email Address]" }}
+    </div>
+
+    <div class="section">
+        <p>I am enclosing herewith an application fee of Rs. {{ application_fee or "10" }}/- (Rupees {{ application_fee_words or "Ten" }} only) in the form of {{ fee_mode or "demand draft/cash" }}.</p>
+    </div>
+
+    <div class="section">
+        <p>If the information sought is not available with your office, kindly transfer this application to the concerned office under intimation to me.</p>
+    </div>
+
+    <div class="section">
+        <p>I request you to provide the information within the stipulated time limit of 30 days as prescribed under the RTI Act, 2005.</p>
+    </div>
+
+    <div class="date-place">
+        <div>
+            <strong>Place:</strong> {{ place or "[Place]" }}<br>
+            <strong>Date:</strong> {{ current_date }}
+        </div>
+        <div>
+            <div class="signature-line"></div>
+            <div>Signature of Applicant</div>
+            <div>{{ applicant_name or "[Your Name]" }}</div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-top: 40px;">
+        <strong>Enclosures:</strong><br>
+        1. Application fee of Rs. {{ application_fee or "10" }}/-<br>
+        2. Copy of identity proof (if required)
+    </div>
+</body>
+</html>

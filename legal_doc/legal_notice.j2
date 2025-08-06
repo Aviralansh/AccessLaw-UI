@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Notice</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.8;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
+        .notice-details {
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+        .field-label {
+            font-weight: bold;
+        }
+        .content-paragraph {
+            margin-bottom: 20px;
+            text-indent: 50px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            text-align: right;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 200px;
+            margin: 20px 0;
+            margin-left: auto;
+        }
+        .date-place {
+            text-align: left;
+            margin-top: 40px;
+        }
+        .address-section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">LEGAL NOTICE</div>
+    </div>
+
+    <div class="notice-details">
+        <strong>NOTICE UNDER SECTION {{ section or "138" }} OF {{ act or "THE NEGOTIABLE INSTRUMENTS ACT, 1881" }}</strong>
+    </div>
+
+    <div class="address-section">
+        <strong>TO:</strong><br>
+        {{ recipient_name or "[Name of the Person/Entity]" }}<br>
+        {{ recipient_address or "[Complete Address of the Recipient]" }}
+    </div>
+
+    <div class="address-section">
+        <strong>FROM:</strong><br>
+        {{ sender_name or "[Your Full Name]" }}<br>
+        {{ sender_address or "[Your Complete Address]" }}<br>
+        Phone: {{ phone or "[Your Phone Number]" }}<br>
+        Email: {{ email or "[Your Email Address]" }}
+    </div>
+
+    <div class="section">
+        <strong>Subject:</strong> {{ subject or "[Subject of the Legal Notice]" }}
+    </div>
+
+    <div class="section">
+        <strong>Sir/Madam,</strong>
+    </div>
+
+    <div class="content-paragraph">
+        TAKE NOTICE that {{ notice_content or "[Detailed description of the issue, facts, and circumstances that have led to this legal notice. Include dates, amounts, agreements, breaches, or any other relevant information.]" }}
+    </div>
+
+    <div class="content-paragraph">
+        {{ additional_facts or "[Additional facts, evidence, or circumstances supporting your case. Include any previous communications, agreements, or attempts to resolve the matter.]" }}
+    </div>
+
+    <div class="content-paragraph">
+        TAKE FURTHER NOTICE that the above acts and conduct on your part are {{ legal_violation or "[illegal/in breach of contract/in violation of law]" }} and have caused {{ damages or "[financial loss/mental agony/damage to reputation]" }} to my client.
+    </div>
+
+    <div class="content-paragraph">
+        TAKE NOTICE that you are hereby called upon to {{ demand or "[pay the outstanding amount/cease the illegal activity/fulfill your obligations]" }} within {{ time_limit or "15 (fifteen)" }} days from the receipt of this notice, failing which my client shall be constrained to initiate appropriate legal proceedings against you for {{ relief_sought or "[recovery of money/damages/injunction/other relief]" }} along with interest and costs.
+    </div>
+
+    <div class="content-paragraph">
+        TAKE FURTHER NOTICE that this notice is issued without prejudice to any other rights and remedies available to my client under law, all of which are expressly reserved.
+    </div>
+
+    <div class="content-paragraph">
+        TAKE NOTICE that if you fail to comply with the demands made herein within the stipulated time, it shall be presumed that you have no defense to the claim made herein and my client shall be free to take such action as deemed fit and proper in the circumstances.
+    </div>
+
+    <div class="date-place">
+        <strong>Place:</strong> {{ place or "[Place]" }}<br>
+        <strong>Date:</strong> {{ current_date }}
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div><strong>{{ sender_name or "[Your Name]" }}</strong></div>
+        <div>{{ designation or "[Advocate/Party-in-Person]" }}</div>
+        {% if advocate_details %}
+        <div>{{ advocate_details }}</div>
+        {% endif %}
+    </div>
+
+    <div class="section" style="margin-top: 40px;">
+        <strong>ACKNOWLEDGMENT:</strong><br>
+        Received the above notice on _____________ (date)<br><br>
+        Signature: _________________________<br>
+        Name: {{ recipient_name or "[Recipient Name]" }}
+    </div>
+</body>
+</html>

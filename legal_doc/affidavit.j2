@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affidavit</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.8;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+        .content-paragraph {
+            margin-bottom: 20px;
+            text-indent: 50px;
+        }
+        .numbered-para {
+            margin-bottom: 15px;
+        }
+        .signature-section {
+            margin-top: 50px;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 200px;
+            margin: 20px 0;
+        }
+        .verification-section {
+            margin-top: 40px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        .deponent-details {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">AFFIDAVIT</div>
+    </div>
+
+    <div class="deponent-details">
+        <strong>I, {{ deponent_name or "[Your Full Name]" }}</strong>, aged {{ age or "[Age]" }} years, son/daughter of {{ father_name or "[Father's Name]" }}, resident of {{ address or "[Your Complete Address]" }}, do hereby solemnly affirm and declare as under:
+    </div>
+
+    <div class="numbered-para">
+        <strong>1.</strong> That I am the deponent herein and I am competent to swear this affidavit. The facts stated hereinbelow are true and correct to the best of my knowledge and belief and nothing material has been concealed therefrom.
+    </div>
+
+    <div class="numbered-para">
+        <strong>2.</strong> {{ statement_2 or "[Second statement/fact that you want to affirm]" }}
+    </div>
+
+    <div class="numbered-para">
+        <strong>3.</strong> {{ statement_3 or "[Third statement/fact that you want to affirm]" }}
+    </div>
+
+    <div class="numbered-para">
+        <strong>4.</strong> {{ statement_4 or "[Fourth statement/fact that you want to affirm]" }}
+    </div>
+
+    <div class="numbered-para">
+        <strong>5.</strong> {{ statement_5 or "[Fifth statement/fact that you want to affirm]" }}
+    </div>
+
+    <div class="numbered-para">
+        <strong>6.</strong> That I undertake to inform the concerned authorities if there is any change in the facts stated above.
+    </div>
+
+    <div class="numbered-para">
+        <strong>7.</strong> That I am making this affidavit for {{ purpose or "[state the purpose for which this affidavit is being made]" }} and no other purpose.
+    </div>
+
+    <div class="section">
+        <strong>DEPONENT</strong>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line"></div>
+        <div><strong>{{ deponent_name or "[Your Name]" }}</strong></div>
+    </div>
+
+    <div class="verification-section">
+        <strong>VERIFICATION</strong><br><br>
+        
+        <div class="content-paragraph">
+            I, the above named deponent, do hereby verify that the contents of this affidavit are true and correct to the best of my knowledge and belief and no part of it is false and nothing material has been concealed therefrom.
+        </div>
+
+        <div style="margin-top: 30px;">
+            <strong>Place:</strong> {{ place or "[Place]" }}<br>
+            <strong>Date:</strong> {{ current_date }}
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-line"></div>
+            <div><strong>{{ deponent_name or "[Your Name]" }}</strong></div>
+            <div>(Deponent)</div>
+        </div>
+    </div>
+
+    <div class="section" style="margin-top: 50px; border-top: 1px solid #333; padding-top: 20px;">
+        <strong>NOTARIZATION</strong><br><br>
+        
+        <div>
+            Sworn before me and signed in my presence on {{ current_date }} at {{ place or "[Place]" }}.
+        </div>
+
+        <div style="margin-top: 30px;">
+            <div class="signature-line"></div>
+            <div><strong>NOTARY PUBLIC</strong></div>
+            <div>Seal & Signature</div>
+        </div>
+    </div>
+</body>
+</html>
