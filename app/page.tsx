@@ -150,7 +150,7 @@ export default function LegalRAGChat() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer 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",
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
         },
         body: JSON.stringify({
           query,
@@ -174,7 +174,7 @@ export default function LegalRAGChat() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer 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",
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
         },
         body: JSON.stringify({
           query,
@@ -306,7 +306,7 @@ export default function LegalRAGChat() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer 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",
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
         },
         body: JSON.stringify({
           query: userMessage.content,
